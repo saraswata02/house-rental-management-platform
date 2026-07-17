@@ -1,0 +1,61 @@
+.auth-navbar{
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    width:100%;
+
+    height:80px;
+
+    display:flex;
+
+    align-items:center;
+
+    padding:0 50px;
+
+    background:rgba(15,23,42,.20);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    border-bottom:1px solid rgba(255,255,255,.15);
+
+    z-index:9999;
+}
+
+.logo h2{
+
+    color:#ffffff;
+
+    font-size:30px;
+
+    font-weight:800;
+
+    letter-spacing:1px;
+
+    text-shadow:
+        0 0 5px #00ffff,
+        0 0 10px #00ffff,
+        0 0 20px #0099ff,
+        0 0 30px #7b2cff,
+        0 0 45px #7b2cff;
+}
+.auth-navbar h2{
+
+    color:white;
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    letter-spacing:1px;
+
+    text-shadow:
+        0 0 8px cyan,
+        0 0 16px blue,
+        0 0 24px purple;
+}
