@@ -1,1 +1,0 @@
-# house-rental-management-platform
