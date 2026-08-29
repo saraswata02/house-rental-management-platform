@@ -1,97 +1,72 @@
+import { useEffect, useState } from "react";
 import OwnerNavbar from "../components/OwnerNavbar";
 import Footer from "../components/Footer";
 import "../styles/ownerNotifications.css";
+import api from "../utils/api";
 
-function OwnerNotifications(){
+function OwnerNotifications() {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const notifications=[
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { data } = await api.get("/notifications");
+        setNotifications(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
 
-{
-icon:"📅",
-title:"New Appointment",
-message:"Rahul Sharma booked a visit.",
-time:"2 minutes ago"
-},
+  const markAllRead = async () => {
+    await api.patch("/notifications/read-all");
+    setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+  };
 
-{
-icon:"💬",
-title:"New Message",
-message:"Sneha Das sent you a message.",
-time:"15 minutes ago"
-},
+  const clearRead = async () => {
+    await api.delete("/notifications/clear-read");
+    setNotifications(notifications.filter((n) => !n.isRead));
+  };
 
-{
-icon:"🏠",
-title:"Property Approved",
-message:"Luxury Apartment is now live.",
-time:"Yesterday"
-},
-
-{
-icon:"👁",
-title:"Property Viewed",
-message:"Your property was viewed 23 times today.",
-time:"Yesterday"
-},
-
-{
-icon:"❌",
-title:"Appointment Cancelled",
-message:"Amit Kumar cancelled tomorrow's visit.",
-time:"2 days ago"
-}
-
-];
-
-return(
-
-<div className="owner-notifications-page">
-
-<OwnerNavbar/>
-
-<div className="notifications-container">
-
-<h1>Notifications</h1>
-
-{
-
-notifications.map((item,index)=>(
-
-<div
-key={index}
-className="notification-card"
->
-
-<div className="notification-icon">
-
-{item.icon}
-
-</div>
-
-<div className="notification-content">
-
-<h3>{item.title}</h3>
-
-<p>{item.message}</p>
-
-<span>{item.time}</span>
-
-</div>
-
-</div>
-
-))
-
-}
-
-</div>
-
-<Footer/>
-
-</div>
-
-);
-
+  return (
+    <div className="owner-notifications-page">
+      <OwnerNavbar />
+      <div className="notifications-container">
+        <h1>Notifications</h1>
+        {notifications.length > 0 && (
+          <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+            <button onClick={markAllRead} style={{ cursor: "pointer" }}>
+              Mark all as read
+            </button>
+            <button onClick={clearRead} style={{ cursor: "pointer", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "6px 12px", borderRadius: "6px" }}>
+              Clear Read
+            </button>
+          </div>
+        )}
+        {loading ? (
+          <p>Loading notifications...</p>
+        ) : notifications.length === 0 ? (
+          <p>No notifications yet.</p>
+        ) : (
+          notifications.map((item) => (
+            <div key={item._id} className="notification-card" style={{ opacity: item.isRead ? 0.6 : 1 }}>
+              <div className="notification-icon">{item.icon}</div>
+              <div className="notification-content">
+                <h3>{item.title}</h3>
+                <p>{item.message}</p>
+                <span>{new Date(item.createdAt).toLocaleString()}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      <Footer />
+    </div>
+  );
 }
 
 export default OwnerNotifications;

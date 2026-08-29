@@ -1,8 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/navbar.css";
-import { useNavigate } from "react-router-dom";
+
 function Navbar() {
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("wishlistIds");
+    navigate("/login");
+  };
 
   return (
     <header className="navbar">
@@ -16,17 +22,16 @@ function Navbar() {
         <Link to="/properties">Properties</Link>
         <Link to="/tenant-wishlist">Wishlist</Link>
         <Link to="/my-appointments">Appointments</Link>
-        <Link to="/tenant-messages">
-    Messages
-</Link>
+        <Link to="/tenant-messages">Messages</Link>
       </nav>
 
       <div className="nav-right">
-        <button className="notification-btn"
-        onClick={() => navigate("/tenant-notifications")}>🔔</button>
-        <button className="profile-btn"
-        onClick={() => navigate("/tenant-profile")}>
+        <button className="notification-btn" onClick={() => navigate("/tenant-notifications")}>🔔</button>
+        <button className="profile-btn" onClick={() => navigate("/tenant-profile")}>
           👤 Profile
+        </button>
+        <button className="logout-btn" onClick={handleLogout} style={{ background: "transparent", border: "1px solid #e53e3e", color: "#e53e3e", padding: "6px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", marginLeft: "8px" }}>
+          Logout
         </button>
       </div>
 
@@ -34,4 +39,4 @@ function Navbar() {
   );
 }
 
-export default Navbar;
+export default Navbar;

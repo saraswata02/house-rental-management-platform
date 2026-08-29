@@ -1,105 +1,77 @@
+import { useEffect, useState } from "react";
 import OwnerNavbar from "../components/OwnerNavbar";
 import Footer from "../components/Footer";
 import "../styles/ownerAppointments.css";
 import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
 
 function OwnerAppointments() {
   const navigate = useNavigate();
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const appointments = [
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { data } = await api.get("/visits/for-owner");
+        setAppointments(data);
+      } catch (err) {
+        console.error("Error loading appointments:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
 
-{
-id:1,
-tenant:"Rahul Sharma",
-property:"Luxury Apartment",
-date:"18 July 2026",
-time:"11:00 AM",
-status:"Pending"
-},
+  const handleStatus = async (id, status) => {
+    try {
+      await api.patch(`/visits/${id}/status`, { status });
+      setAppointments(appointments.map((a) => (a._id === id ? { ...a, status } : a)));
+    } catch (err) {
+      alert("Failed to update status.");
+    }
+  };
 
-{
-id:2,
-tenant:"Aman Kumar",
-property:"Green Villa",
-date:"20 July 2026",
-time:"03:00 PM",
-status:"Approved"
-},
-
-{
-id:3,
-tenant:"Sneha Das",
-property:"City Residency",
-date:"22 July 2026",
-time:"09:30 AM",
-status:"Rejected"
-}
-
-];
-
-return(
-
-<div className="owner-appointments-page">
-
-<OwnerNavbar/>
-
-<div className="owner-appointments-container">
-
-<h1>Appointment Requests</h1>
-
-<div className="appointments-list">
-
-{appointments.map((item)=>(
-
-<div className="appointment-card" key={item.id}>
-
-<div className="appointment-info">
-
-<h2>{item.tenant}</h2>
-
-<p>🏠 {item.property}</p>
-
-<p>📅 {item.date}</p>
-
-<p>🕒 {item.time}</p>
-
-<span className={`status ${item.status.toLowerCase()}`}>
-{item.status}
-</span>
-
-</div>
-
-<div className="appointment-actions">
-
-<button className="view-btn"
-onClick={()=>navigate("/appointment-details")}>
-View Details
-</button>
-
-<button className="approve-btn">
-Approve
-</button>
-
-<button className="reject-btn">
-Reject
-</button>
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-</div>
-
-<Footer/>
-
-</div>
-
-);
-
+  return (
+    <div className="owner-appointments-page">
+      <OwnerNavbar />
+      <div className="owner-appointments-container">
+        <h1>Appointment Requests</h1>
+        <div className="appointments-list">
+          {loading ? (
+            <p>Loading appointments...</p>
+          ) : appointments.length === 0 ? (
+            <p>No appointment requests yet.</p>
+          ) : (
+            appointments.map((item) => (
+              <div className="appointment-card" key={item._id}>
+                <div className="appointment-info">
+                  <h2>{item.tenant?.firstName} {item.tenant?.lastName}</h2>
+                  <p>🏠 {item.property?.title}</p>
+                  <p>📅 {item.visitDate}</p>
+                  <p>🕒 {item.timeSlot}</p>
+                  <span className={`status ${item.status}`}>{item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span>
+                </div>
+                <div className="appointment-actions">
+                  <button className="view-btn" onClick={() => navigate(`/appointment-details?id=${item._id}`)}>
+                    View Details
+                  </button>
+                  {item.status === "pending" && (
+                    <>
+                      <button className="approve-btn" onClick={() => handleStatus(item._id, "approved")}>Approve</button>
+                      <button className="reject-btn" onClick={() => handleStatus(item._id, "rejected")}>Reject</button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
 }
 
 export default OwnerAppointments;

@@ -1,141 +1,126 @@
+import { useEffect, useState, useCallback } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import PropertyFilter from "../components/PropertyFilter";
 import PropertyCard from "../components/PropertyCard";
 import "../styles/properties.css";
+import PropertyFilter from "../components/PropertyFilter";
+import api from "../utils/api";
 
-function Properties(){
+const BACKEND_URL = "http://localhost:5000";
+function getImageSrc(img) {
+  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (img.startsWith("/uploads")) return BACKEND_URL + img;
+  return img;
+}
 
-    return(
+function Properties() {
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState("");
 
-        <div className="properties-page">
+  // Filter state — each key matches a backend query param
+  const [filters, setFilters] = useState({
+    location: "",
+    bhk: "",
+    budget: "",
+    availabilityStatus: "",
+  });
 
-            <Navbar/>
+  const fetchProperties = useCallback(async () => {
+    try {
+      setLoading(true);
+      const params = {};
+      if (sort) params.sort = sort;
+      if (filters.location) params.location = filters.location;
+      if (filters.bhk) params.bhk = filters.bhk;
+      if (filters.availabilityStatus) params.availabilityStatus = filters.availabilityStatus;
+      if (filters.budget) {
+        const [min, max] = filters.budget.split("-");
+        params.minRent = min;
+        params.maxRent = max;
+      }
+      const { data } = await api.get("/properties", { params });
+      setProperties(data);
+    } catch (err) {
+      console.error("Error fetching properties:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [sort, filters]);
 
-            <section className="properties-header">
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProperties();
+    }, 400); // debounce — wait 400ms after last filter change
+    return () => clearTimeout(timer);
+  }, [fetchProperties]);
 
-                <h1>Find Your Perfect Rental</h1>
+  const handleSortChange = (e) => {
+    const map = {
+      "Newest First": "newest",
+      "Price: Low to High": "price_asc",
+      "Price: High to Low": "price_desc",
+      "Highest Rating": "rating",
+    };
+    setSort(map[e.target.value] || "");
+  };
 
-                <p>
-                    Browse thousands of verified rental properties.
-                </p>
+  const handleFilter = (name, value) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
 
-            </section>
+  return (
+    <div className="properties-page">
+      <Navbar />
 
-             <div className="properties-layout">
+      <section className="properties-header">
+        <h1>Find Your Perfect Rental</h1>
+        <p>Browse thousands of verified rental properties.</p>
+      </section>
 
-            <PropertyFilter/>
-              <div className="properties-content">
-
-            <section className="result-header">
-
-    <div>
-<h2>Explore Rental Properties</h2>
-
-<p>
-    Browse verified rental homes across Odisha.
-</p>
-
-    </div>
-
-    <select className="sort-select">
-
-        <option>Sort By</option>
-
-        <option>Newest First</option>
-
-        <option>Price: Low to High</option>
-
-        <option>Price: High to Low</option>
-
-        <option>Highest AI Match</option>
-
-        <option>Highest Rating</option>
-
-    </select>
-
-</section>
-
-            <section className="property-list">
-
-                 <PropertyCard
-            id={1}
-            image="/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg"
-            title="Luxury Apartment"
-            location="Bhubaneswar"
-            rent="18,000"
-            bhk="2 BHK"
-            rating="4.8"
-           
-        />
-
-        <PropertyCard
-            id={2}
-            image="/houses/WhatsApp Image 2026-06-30 at 10.55.15 AM.jpeg"
-            title="Modern Villa"
-            location="Talcher"
-            rent="25,000"
-            bhk="3 BHK"
-            rating="4.9"
-            
-        />
-
-        <PropertyCard
-            id={3}
-            image="/houses/WhatsApp Image 2026-06-30 at 10.54.56 AM.jpeg"
-            title="Studio Apartment"
-            location="Cuttack"
-            rent="12,000"
-            bhk="1 BHK"
-            rating="4.6"
-           
-        />
-
-        <PropertyCard
-            id={4}
-            image="/houses/WhatsApp Image 2026-06-30 at 10.54.53 AM.jpeg"
-            title="Family Home"
-            location="Angul"
-            rent="15,000"
-            bhk="2 BHK"
-            rating="4.7"
-            
-        />
-
-        <PropertyCard
-            id={5}
-            image="/houses/WhatsApp Image 2026-06-30 at 10.54.50 AM.jpeg"
-            title="Luxury Duplex"
-            location="Puri"
-            rent="32,000"
-            bhk="4 BHK"
-            rating="5.0"
-            
-        />
-
-        <PropertyCard
-            id={6}
-            image="/houses/house 6.webp"
-            title="Budget Flat"
-            location="Sambalpur"
-            rent="9,000"
-            bhk="1 BHK"
-            rating="4.4"
-            
-        />
-
-            </section>
-
+      <div className="properties-layout">
+        <PropertyFilter onFilter={handleFilter} />
+        <div className="properties-content">
+          <section className="result-header">
+            <div>
+              <h2>Explore Rental Properties</h2>
+              <p>Browse verified rental homes across Odisha.</p>
             </div>
+            <select className="sort-select" onChange={handleSortChange}>
+              <option>Sort By</option>
+              <option>Newest First</option>
+              <option>Price: Low to High</option>
+              <option>Price: High to Low</option>
+              <option>Highest Rating</option>
+            </select>
+          </section>
 
-            </div>
-
-            <Footer/>
-
+          <section className="property-list">
+            {loading ? (
+              <p style={{ padding: "20px" }}>Loading properties...</p>
+            ) : properties.length === 0 ? (
+              <p style={{ padding: "20px" }}>No properties found for the selected filters.</p>
+            ) : (
+              properties.map((p) => (
+                <PropertyCard
+                  key={p._id}
+                  id={p._id}
+                  image={getImageSrc(p.images?.[0])}
+                  title={p.title}
+                  location={p.location}
+                  rent={p.rent.toLocaleString("en-IN")}
+                  bhk={p.bhk}
+                  rating={p.rating}
+                />
+              ))
+            )}
+          </section>
         </div>
+      </div>
 
-    );
-
+      <Footer />
+    </div>
+  );
 }
 
 export default Properties;

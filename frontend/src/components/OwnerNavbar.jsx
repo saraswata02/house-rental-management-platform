@@ -1,9 +1,15 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../styles/navbar.css";
-import { useNavigate } from "react-router-dom";
 
 function OwnerNavbar() {
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("wishlistIds");
+    navigate("/login");
+  };
+
   return (
     <header className="navbar">
 
@@ -20,12 +26,12 @@ function OwnerNavbar() {
       </nav>
 
       <div className="nav-right">
-        <button className="notification-btn"
-        onClick={() => navigate("/owner-notifications")}
-                     style={{cursor:"pointer"}}
-        >🔔</button>
+        <button className="notification-btn" onClick={() => navigate("/owner-notifications")} style={{ cursor: "pointer" }}>🔔</button>
         <button className="profile-btn" onClick={() => navigate("/owner-profile")}>
           👤 Profile
+        </button>
+        <button className="logout-btn" onClick={handleLogout} style={{ background: "transparent", border: "1px solid #e53e3e", color: "#e53e3e", padding: "6px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", marginLeft: "8px" }}>
+          Logout
         </button>
       </div>
 
@@ -33,6 +39,4 @@ function OwnerNavbar() {
   );
 }
 
-
-
-export default OwnerNavbar;
+export default OwnerNavbar;
