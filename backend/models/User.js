@@ -24,7 +24,7 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Auto-generate userId before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
     if (this.isNew) {
         const count = await mongoose.model('User').countDocuments();
         const prefix = this.role === 'landlord' ? 'OWN' : 'TEN';
@@ -34,7 +34,6 @@ userSchema.pre('save', async function (next) {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
     }
-    next();
 });
 
 // Match password
