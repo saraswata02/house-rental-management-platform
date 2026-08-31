@@ -56,6 +56,13 @@ const addToWishlist = async (req, res) => {
         const user = await User.findById(req.user._id);
         const propertyId = req.params.propertyId;
 
+        // Validate the property actually exists
+        const Property = require('../models/Property');
+        const propertyExists = await Property.exists({ _id: propertyId });
+        if (!propertyExists) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
+
         if (!user.wishlist.includes(propertyId)) {
             user.wishlist.push(propertyId);
             await user.save();

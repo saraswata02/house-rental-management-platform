@@ -28,7 +28,7 @@ function OwnerAppointments() {
     try {
       await api.patch(`/visits/${id}/status`, { status });
       setAppointments(appointments.map((a) => (a._id === id ? { ...a, status } : a)));
-    } catch (err) {
+    } catch {
       alert("Failed to update status.");
     }
   };

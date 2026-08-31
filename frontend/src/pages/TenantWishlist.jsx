@@ -37,7 +37,7 @@ function TenantWishlist() {
         try {
             await api.delete(`/users/wishlist/${propertyId}`);
             setWishlist(wishlist.filter((p) => p._id !== propertyId));
-        } catch (err) {
+        } catch {
             alert("Failed to remove. Please try again.");
         }
     };

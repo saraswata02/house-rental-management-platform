@@ -24,7 +24,9 @@ const syncWishlistFromDB = async () => {
         const ids = (data.wishlist || []).map((item) => String(item._id || item));
         localStorage.setItem("wishlistIds", JSON.stringify(ids));
         wishlistSyncDone = true;
-    } catch {}
+    } catch {
+        // Silently ignore — wishlist sync failure should not break the UI
+    }
 };
 
 const getLocalWishlistIds = () => {

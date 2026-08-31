@@ -77,7 +77,7 @@ function TenantProfile() {
         },
       });
       setEditing(false);
-    } catch (err) {
+    } catch {
       alert("Failed to save profile.");
     } finally {
       setSaving(false);
@@ -95,7 +95,7 @@ function TenantProfile() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setProfilePic(BACKEND_URL + data.profilePicture);
-    } catch (err) {
+    } catch {
       alert("Failed to upload profile picture.");
     } finally {
       setUploadingPic(false);

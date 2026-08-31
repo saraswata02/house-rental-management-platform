@@ -36,7 +36,7 @@ function MyProperties() {
     try {
       await api.delete(`/properties/${id}`);
       setProperties(properties.filter((p) => p._id !== id));
-    } catch (err) {
+    } catch {
       alert("Delete failed.");
     }
   };

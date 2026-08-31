@@ -41,7 +41,7 @@ const getOwnerAnalytics = async (req, res) => {
             .limit(5);
 
         const recentActivity = recentVisits.map(v => ({
-            message: `${v.tenant.firstName} ${v.status === 'approved' ? 'approved' : v.status === 'rejected' ? 'cancelled' : 'booked'} a visit for ${v.property.title}`,
+            message: `${v.tenant?.firstName || 'A tenant'} ${v.status === 'approved' ? 'approved' : v.status === 'rejected' ? 'cancelled' : 'booked'} a visit for ${v.property?.title || 'a property'}`,
         }));
 
         res.json({

@@ -39,7 +39,7 @@ function AppointmentDetails() {
             await api.patch(`/visits/${visitId}/status`, { status });
             setVisit({ ...visit, status });
             setModalOpen(false);
-        } catch (err) {
+        } catch {
             alert("Failed to update status. Please try again.");
             setModalOpen(false);
         }
@@ -50,7 +50,7 @@ function AppointmentDetails() {
             await api.patch(`/visits/${visitId}/reschedule`, { visitDate, timeSlot });
             setVisit({ ...visit, visitDate, timeSlot, status: "pending" });
             setRescheduleModalOpen(false);
-        } catch (err) {
+        } catch {
             alert("Failed to reschedule. Please try again.");
         }
     };

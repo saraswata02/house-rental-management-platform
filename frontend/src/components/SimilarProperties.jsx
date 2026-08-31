@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import PropertyCard from "./PropertyCard";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -11,7 +10,6 @@ function getImageSrc(img) {
 
 // SimilarProperties — shows a row of similar listings based on BHK/location
 function SimilarProperties({ properties = [], currentId }) {
-  const navigate = useNavigate();
 
   const similar = properties
     .filter((p) => p._id !== currentId)

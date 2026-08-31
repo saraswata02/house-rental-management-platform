@@ -35,7 +35,7 @@ function MyAppointments() {
     try {
       await api.patch(`/visits/${visitId}/cancel`);
       setVisits(visits.map((v) => v._id === visitId ? { ...v, status: "cancelled" } : v));
-    } catch (err) {
+    } catch {
       alert("Failed to cancel. Please try again.");
     }
   };

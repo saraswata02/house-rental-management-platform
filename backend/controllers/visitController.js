@@ -97,6 +97,11 @@ const updateVisitStatus = async (req, res) => {
         const visit = await Visit.findById(req.params.id).populate('property').populate('tenant');
         if (!visit) return res.status(404).json({ message: 'Visit not found' });
 
+        // Security: Ensure the landlord owns the property for this visit
+        if (visit.property.landlord.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this visit' });
+        }
+
         visit.status = status;
         await visit.save();
 
@@ -124,6 +129,11 @@ const rescheduleVisit = async (req, res) => {
         const { visitDate, timeSlot } = req.body;
         const visit = await Visit.findById(req.params.id).populate('tenant').populate('property');
         if (!visit) return res.status(404).json({ message: 'Visit not found' });
+
+        // Security: Ensure the landlord owns the property for this visit
+        if (visit.property.landlord.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to reschedule this visit' });
+        }
 
         visit.visitDate = visitDate;
         visit.timeSlot = timeSlot;

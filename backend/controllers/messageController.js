@@ -20,6 +20,8 @@ const getConversations = async (req, res) => {
         const seen = new Set();
         const conversations = [];
         for (const msg of messages) {
+            // Guard against deleted sender/receiver accounts
+            if (!msg.sender || !msg.receiver) continue;
             const partner = msg.sender._id.toString() === userId.toString() ? msg.receiver : msg.sender;
             if (!seen.has(partner._id.toString())) {
                 seen.add(partner._id.toString());
