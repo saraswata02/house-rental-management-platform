@@ -1,0 +1,206 @@
+.my-properties-page{
+
+    background:#f5f7fb;
+
+    min-height:100vh;
+
+    padding-top:80px;
+
+}
+
+.my-properties-container{
+
+    width:90%;
+    max-width:1400px;
+
+    margin:40px auto;
+
+}
+
+.page-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:40px;
+
+}
+
+.page-header h1{
+
+    font-size:40px;
+
+    color:#222;
+
+}
+
+.add-property-btn{
+
+    background:#2563eb;
+
+    color:white;
+
+    border:none;
+
+    padding:15px 28px;
+
+    border-radius:12px;
+
+    font-size:18px;
+
+    cursor:pointer;
+
+    transition:.3s;
+
+}
+
+.add-property-btn:hover{
+
+    background:#1d4ed8;
+
+}
+
+.owner-property-card{
+
+    background:white;
+
+    border-radius:20px;
+
+    display:flex;
+
+    gap:25px;
+
+    padding:25px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+}
+
+.owner-property-card img{
+
+    width:280px;
+
+    height:190px;
+
+    object-fit:cover;
+
+    border-radius:15px;
+
+}
+
+.property-details{
+
+    flex:1;
+
+}
+
+.property-details h2{
+
+    margin-bottom:10px;
+
+}
+
+.property-details p{
+
+    color:#666;
+
+    margin:10px 0;
+
+}
+
+.property-details h3{
+
+    color:#2563eb;
+
+    margin:15px 0;
+
+}
+
+.property-stats{
+
+    margin-top:18px;
+
+}
+
+.active{
+
+    display:inline-block;
+
+    padding:8px 16px;
+
+    background:#e8f9ef;
+
+    color:#16a34a;
+
+    border:1px solid #22c55e;
+
+    border-radius:20px;
+
+    font-weight:600;
+
+}
+
+
+.property-actions{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    gap:15px;
+
+}
+
+.view-btn,
+.edit-btn,
+.delete-btn{
+
+    border:none;
+
+    padding:12px 22px;
+
+    border-radius:10px;
+
+    font-size:16px;
+
+    cursor:pointer;
+
+}
+
+.view-btn{
+
+    background:#2563eb;
+
+    color:white;
+
+}
+
+.edit-btn{
+
+    background:#ff9800;
+
+    color:white;
+
+}
+
+.delete-btn{
+
+    background:#dc2626;
+
+    color:white;
+
+}
+.property-list{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:30px;
+
+}

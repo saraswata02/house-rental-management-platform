@@ -1,0 +1,42 @@
+import { Link, useNavigate } from "react-router-dom";
+import "../styles/navbar.css";
+
+function Navbar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("wishlistIds");
+    navigate("/");
+  };
+
+  return (
+    <header className="navbar">
+
+      <div className="logo">
+        <h2>SMARTRENT-AI</h2>
+      </div>
+
+      <nav className="nav-links">
+        <Link to="/tenant-dashboard">Dashboard</Link>
+        <Link to="/properties">Properties</Link>
+        <Link to="/tenant-wishlist">Wishlist</Link>
+        <Link to="/my-appointments">Appointments</Link>
+        <Link to="/tenant-messages">Messages</Link>
+      </nav>
+
+      <div className="nav-right">
+        <button className="notification-btn" onClick={() => navigate("/tenant-notifications")}>🔔</button>
+        <button className="profile-btn" onClick={() => navigate("/tenant-profile")}>
+          👤 Profile
+        </button>
+        <button className="logout-btn" onClick={handleLogout} style={{ background: "transparent", border: "1px solid #e53e3e", color: "#e53e3e", padding: "6px 14px", borderRadius: "8px", cursor: "pointer", fontWeight: "600", marginLeft: "8px" }}>
+          Logout
+        </button>
+      </div>
+
+    </header>
+  );
+}
+
+export default Navbar;
