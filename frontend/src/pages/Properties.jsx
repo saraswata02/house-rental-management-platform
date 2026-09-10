@@ -6,9 +6,9 @@ import "../styles/properties.css";
 import PropertyFilter from "../components/PropertyFilter";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 function getImageSrc(img) {
-  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (!img) return null;
   if (img.startsWith("/uploads")) return BACKEND_URL + img;
   return img;
 }

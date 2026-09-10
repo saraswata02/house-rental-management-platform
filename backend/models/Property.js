@@ -20,6 +20,7 @@ const propertySchema = new mongoose.Schema({
     landlord:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     rating:      { type: Number, default: 4.5, min: 0, max: 5 },
     views:       { type: Number, default: 0 },
+    availableDates: [{ type: String }], // Dates set by owner for visits (e.g. ['2026-09-15', '2026-09-18'])
 }, { timestamps: true });
 
 module.exports = mongoose.model('Property', propertySchema);

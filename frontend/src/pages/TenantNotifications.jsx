@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "../styles/tenantNotifications.css";
@@ -7,6 +8,7 @@ import api from "../utils/api";
 function TenantNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetch = async () => {
@@ -52,16 +54,51 @@ function TenantNotifications() {
         ) : notifications.length === 0 ? (
           <p>No notifications yet.</p>
         ) : (
-          notifications.map((item) => (
-            <div key={item._id} className="notification-card" style={{ opacity: item.isRead ? 0.6 : 1 }}>
-              <div className="notification-icon">{item.icon}</div>
-              <div className="notification-content">
-                <h3>{item.title}</h3>
-                <p>{item.message}</p>
-                <span>{new Date(item.createdAt).toLocaleString()}</span>
+          notifications.map((item) => {
+            const isAppointment = /appointment|visit|date/i.test(item.title + " " + item.message);
+            return (
+              <div
+                key={item._id}
+                className="notification-card"
+                style={{
+                  opacity: item.isRead ? 0.6 : 1,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <div className="notification-icon">{item.icon}</div>
+                  <div className="notification-content">
+                    <h3>{item.title}</h3>
+                    <p>{item.message}</p>
+                    <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {isAppointment && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/my-appointments")}
+                    style={{
+                      background: "#2563eb",
+                      color: "#fff",
+                      border: "none",
+                      padding: "8px 14px",
+                      borderRadius: "8px",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      marginLeft: "12px",
+                    }}
+                  >
+                    View Appointments →
+                  </button>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
       <Footer />

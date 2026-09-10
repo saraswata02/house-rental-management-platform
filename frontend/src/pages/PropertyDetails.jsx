@@ -7,9 +7,9 @@ import PropertyMap from "../components/PropertyMap";
 import "../styles/propertyDetails.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 function getImageSrc(img) {
-  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (!img) return null;
   if (img.startsWith("/uploads")) return BACKEND_URL + img;
   return img;
 }
@@ -19,7 +19,7 @@ function PropertyDetails() {
   const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedImage, setSelectedImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,9 @@ function PropertyDetails() {
       try {
         const { data } = await api.get(`/properties/${id}`);
         setProperty(data);
-        setSelectedImage(getImageSrc(data.images?.[0]));
+        if (data.images && data.images.length > 0) {
+          setSelectedImage(data.images[0]);
+        }
       } catch (err) {
         console.error("Error loading property:", err);
       } finally {
@@ -40,6 +42,8 @@ function PropertyDetails() {
   if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Loading property...</div>;
   if (!property) return <div style={{ padding: "40px", textAlign: "center" }}>Property not found.</div>;
 
+  const resolvedMainImage = getImageSrc(selectedImage);
+
   return (
     <div className="property-details-page">
       <Navbar />
@@ -51,18 +55,38 @@ function PropertyDetails() {
 
         <div className="property-hero">
           <div className="property-image-section">
-            <img src={getImageSrc(selectedImage)} alt={property.title} className="property-main-image" />
-            <div className="image-gallery">
-              {(property.images || []).map((img, index) => (
-                <img
-                  key={index}
-                  src={getImageSrc(img)}
-                  alt="Property"
-                  className={`gallery-image ${selectedImage === img ? "active" : ""}`}
-                  onClick={() => setSelectedImage(getImageSrc(img))}
-                />
-              ))}
-            </div>
+            {resolvedMainImage ? (
+              <img src={resolvedMainImage} alt={property.title} className="property-main-image" />
+            ) : (
+              <div style={{
+                width: "100%",
+                height: "380px",
+                background: "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)",
+                borderRadius: "16px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "12px",
+                color: "#64748b"
+              }}>
+                <span style={{ fontSize: "52px" }}>🏠</span>
+                <span style={{ fontSize: "16px", fontWeight: 500 }}>No photos uploaded for this property</span>
+              </div>
+            )}
+            {property.images && property.images.length > 1 && (
+              <div className="image-gallery">
+                {property.images.map((img, index) => (
+                  <img
+                    key={index}
+                    src={getImageSrc(img)}
+                    alt="Property"
+                    className={`gallery-image ${selectedImage === img ? "active" : ""}`}
+                    onClick={() => setSelectedImage(img)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="property-basic-info">
@@ -148,6 +172,8 @@ function PropertyDetails() {
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
         propertyId={id}
+        availableDates={property.availableDates || []}
+        propertyTitle={property.title}
       />
       <Footer />
     </div>

@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import "../styles/myProperties.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 function getImageSrc(img) {
-  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (!img) return null;
   if (img.startsWith("/uploads")) return BACKEND_URL + img;
   return img;
 }
@@ -58,12 +58,34 @@ function MyProperties() {
           ) : properties.length === 0 ? (
             <p>No properties listed yet. <span style={{ color: "#2563eb", cursor: "pointer" }} onClick={() => navigate("/add-property")}>Add one now →</span></p>
           ) : (
-            properties.map((p) => (
+            properties.map((p) => {
+              const cardImg = getImageSrc(p.images?.[0]);
+              return (
               <div className="owner-property-card" key={p._id}>
-                <img
-                  src={getImageSrc(p.images?.[0])}
-                  alt="House"
-                />
+                {cardImg ? (
+                  <img
+                    src={cardImg}
+                    alt={p.title}
+                  />
+                ) : (
+                  <div style={{
+                    width: "160px",
+                    height: "120px",
+                    background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
+                    borderRadius: "12px",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#64748b",
+                    fontSize: "12px",
+                    flexShrink: 0,
+                    gap: "4px"
+                  }}>
+                    <span style={{ fontSize: "24px" }}>🏠</span>
+                    <span>No photo</span>
+                  </div>
+                )}
                 <div className="property-details">
                   <h2>{p.title}</h2>
                   <p>📍 {p.location}</p>
@@ -80,7 +102,8 @@ function MyProperties() {
                   <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
                 </div>
               </div>
-            ))
+            );
+          })
           )}
         </div>
       </div>

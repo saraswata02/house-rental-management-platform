@@ -5,10 +5,10 @@ import Footer from "../components/Footer";
 import "../styles/tenantWishlist.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function getImageSrc(img) {
-    if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+    if (!img) return null;
     if (img.startsWith("/uploads")) return BACKEND_URL + img;
     return img;
 }
@@ -63,12 +63,31 @@ function TenantWishlist() {
                     </div>
                 ) : (
                     <div className="wishlist-grid">
-                        {wishlist.map((property) => (
+                        {wishlist.map((property) => {
+                            const wishImg = getImageSrc(property.images?.[0]);
+                            return (
                             <div key={property._id} className="wishlist-card">
-                                <img
-                                    src={getImageSrc(property.images?.[0])}
-                                    alt={property.title}
-                                />
+                                {wishImg ? (
+                                    <img
+                                        src={wishImg}
+                                        alt={property.title}
+                                    />
+                                ) : (
+                                    <div style={{
+                                        width: "100%",
+                                        height: "200px",
+                                        background: "linear-gradient(135deg, #f8fafc, #e2e8f0)",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#64748b",
+                                        gap: "8px"
+                                    }}>
+                                        <span style={{ fontSize: "32px" }}>🏠</span>
+                                        <span style={{ fontSize: "13px" }}>No photo</span>
+                                    </div>
+                                )}
 
                                 <div className="wishlist-info">
                                     <h3>{property.title}</h3>
@@ -100,7 +119,8 @@ function TenantWishlist() {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        );
+                    })}
                     </div>
                 )}
             </div>

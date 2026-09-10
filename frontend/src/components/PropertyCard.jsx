@@ -4,11 +4,11 @@ import { useNavigate } from "react-router-dom";
 import "../styles/propertyCard.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 // Helper: prepend backend URL for uploaded images
 function getImageSrc(img) {
-    if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+    if (!img) return null;
     if (img.startsWith("/uploads")) return BACKEND_URL + img;
     return img;
 }
@@ -41,6 +41,7 @@ function PropertyCard({ id, image, title, location, rent, bhk, rating }) {
     const navigate = useNavigate();
 
     const [saved, setSaved] = useState(() => getLocalWishlistIds().includes(String(id)));
+    const [imgFailed, setImgFailed] = useState(false);
 
     // Sync from DB on first mount so hearts are correct across devices / browsers
     useEffect(() => {
@@ -72,14 +73,24 @@ function PropertyCard({ id, image, title, location, rent, bhk, rating }) {
         }
     };
 
+    const resolvedSrc = getImageSrc(image);
+
     return (
         <div className="property-card">
             {/* Property Image */}
             <div className="property-image">
-                <img
-                    src={getImageSrc(image)}
-                    alt={title}
-                />
+                {resolvedSrc && !imgFailed ? (
+                    <img
+                        src={resolvedSrc}
+                        alt={title}
+                        onError={() => setImgFailed(true)}
+                    />
+                ) : (
+                    <div className="no-image-placeholder">
+                        <span className="no-image-icon">🏠</span>
+                        <span className="no-image-text">No photo uploaded</span>
+                    </div>
+                )}
 
                 <span
                     className={`wishlist ${saved ? "saved" : ""}`}

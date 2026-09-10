@@ -5,9 +5,13 @@ const Notification = require('../models/Notification');
 // @desc    Book a new visit
 // @route   POST /api/visits
 // @access  Private (Tenant)
+// @desc    Book a new visit
+// @route   POST /api/visits
+// @access  Private (Tenant)
 const bookVisit = async (req, res) => {
     try {
-        const { propertyId, visitDate, timeSlot, purpose, additionalNote } = req.body;
+        const propertyId = req.body.propertyId || req.body.property;
+        const { visitDate, timeSlot, purpose, additionalNote } = req.body;
 
         const property = await Property.findById(propertyId).populate('landlord');
         if (!property) return res.status(404).json({ message: 'Property not found' });
@@ -16,7 +20,7 @@ const bookVisit = async (req, res) => {
             property: propertyId,
             tenant: req.user._id,
             visitDate,
-            timeSlot,
+            timeSlot: timeSlot || '11:00 AM',
             purpose: purpose || 'House Inspection',
             additionalNote: additionalNote || '',
         });
@@ -25,8 +29,8 @@ const bookVisit = async (req, res) => {
         await Notification.create({
             user: property.landlord._id,
             icon: '📅',
-            title: 'New Appointment',
-            message: `${req.user.firstName} ${req.user.lastName} booked a visit for ${property.title}.`,
+            title: 'New Appointment Request',
+            message: `${req.user.firstName} ${req.user.lastName} booked a visit for "${property.title}" on ${visitDate} at ${timeSlot || '11:00 AM'}.`,
         });
 
         res.status(201).json(visit);
@@ -41,7 +45,7 @@ const bookVisit = async (req, res) => {
 const getMyVisits = async (req, res) => {
     try {
         const visits = await Visit.find({ tenant: req.user._id })
-            .populate('property', 'title location images rent')
+            .populate('property', 'title location images rent availableDates landlord bhk')
             .sort({ createdAt: -1 });
         res.json(visits);
     } catch (error) {
@@ -59,7 +63,7 @@ const getVisitsForOwner = async (req, res) => {
 
         const visits = await Visit.find({ property: { $in: propertyIds } })
             .populate('tenant', 'firstName lastName email phone profilePicture')
-            .populate('property', 'title location rent bhk')
+            .populate('property', 'title location rent bhk availableDates images')
             .sort({ createdAt: -1 });
 
         res.json(visits);
@@ -75,7 +79,7 @@ const getVisitById = async (req, res) => {
     try {
         const visit = await Visit.findById(req.params.id)
             .populate('tenant', 'firstName lastName email phone profilePicture')
-            .populate('property', 'title location rent bhk images');
+            .populate('property', 'title location rent bhk availableDates images landlord');
         if (!visit) return res.status(404).json({ message: 'Visit not found' });
         res.json(visit);
     } catch (error) {
@@ -88,8 +92,9 @@ const getVisitById = async (req, res) => {
 // @access  Private (Landlord)
 const updateVisitStatus = async (req, res) => {
     try {
-        const { status } = req.body; // 'approved' | 'rejected' | 'completed'
-        const allowedStatuses = ['approved', 'rejected', 'completed'];
+        let { status } = req.body; // 'approved' | 'rejected' | 'completed'
+        if (status === 'confirmed') status = 'approved';
+        const allowedStatuses = ['approved', 'rejected', 'completed', 'cancelled'];
         if (!allowedStatuses.includes(status)) {
             return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatuses.join(', ')}` });
         }
@@ -107,12 +112,18 @@ const updateVisitStatus = async (req, res) => {
 
         // Notify tenant
         const iconMap = { approved: '✅', rejected: '❌', completed: '🏠' };
-        const titleMap = { approved: 'Appointment Approved', rejected: 'Appointment Rejected', completed: 'Visit Completed' };
+        const titleMap = { approved: 'Appointment Approved', rejected: 'Appointment Cancelled/Rejected', completed: 'Visit Completed' };
+        const messageMap = {
+            approved: `Owner has approved your visit for "${visit.property.title}" on ${visit.visitDate} at ${visit.timeSlot}.`,
+            rejected: `Owner was unable to accept your visit for "${visit.property.title}" on ${visit.visitDate}.`,
+            completed: `Your visit to "${visit.property.title}" is marked as completed.`
+        };
+
         await Notification.create({
             user: visit.tenant._id,
             icon: iconMap[status] || '🔔',
-            title: titleMap[status],
-            message: `Your visit to ${visit.property.title} on ${visit.visitDate} has been ${status}.`,
+            title: titleMap[status] || 'Appointment Update',
+            message: messageMap[status] || `Your visit to ${visit.property.title} has been ${status}.`,
         });
 
         res.json(visit);
@@ -121,7 +132,87 @@ const updateVisitStatus = async (req, res) => {
     }
 };
 
-// @desc    Reschedule a visit
+// @desc    Owner marks selected date unavailable and requests tenant to choose another date
+// @route   PATCH /api/visits/:id/reschedule-request
+// @access  Private (Landlord)
+const requestReschedule = async (req, res) => {
+    try {
+        const { note } = req.body;
+        const visit = await Visit.findById(req.params.id).populate('property').populate('tenant');
+        if (!visit) return res.status(404).json({ message: 'Visit not found' });
+
+        // Security: Ensure the landlord owns the property for this visit
+        if (visit.property.landlord.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this visit' });
+        }
+
+        const unavailableDate = visit.visitDate;
+        if (!visit.unavailableDates) visit.unavailableDates = [];
+        if (!visit.unavailableDates.includes(unavailableDate)) {
+            visit.unavailableDates.push(unavailableDate);
+        }
+
+        visit.status = 'reschedule_requested';
+        visit.ownerNote = note || `Owner is not available on ${unavailableDate}. Please choose another date from the available options.`;
+        await visit.save();
+
+        // Notify tenant
+        await Notification.create({
+            user: visit.tenant._id,
+            icon: '⚠️',
+            title: 'Date Not Available - Please Choose Another',
+            message: `Owner is not available on ${unavailableDate} for "${visit.property.title}". Please choose another available date.`,
+        });
+
+        res.json(visit);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Tenant selects alternate date after owner requested reschedule
+// @route   PATCH /api/visits/:id/select-date
+// @access  Private (Tenant)
+const selectAlternateDate = async (req, res) => {
+    try {
+        const { visitDate, timeSlot } = req.body;
+        if (!visitDate) {
+            return res.status(400).json({ message: 'Please select a visit date.' });
+        }
+
+        const visit = await Visit.findById(req.params.id).populate({
+            path: 'property',
+            populate: { path: 'landlord', select: '_id firstName lastName' }
+        });
+        if (!visit) return res.status(404).json({ message: 'Visit not found' });
+
+        if (visit.tenant.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized to update this appointment' });
+        }
+
+        visit.visitDate = visitDate;
+        if (timeSlot) visit.timeSlot = timeSlot;
+        visit.status = 'pending';
+        visit.ownerNote = '';
+        await visit.save();
+
+        // Notify landlord
+        if (visit.property?.landlord?._id) {
+            await Notification.create({
+                user: visit.property.landlord._id,
+                icon: '📅',
+                title: 'Alternate Date Selected',
+                message: `${req.user.firstName} ${req.user.lastName} selected ${visitDate} at ${visit.timeSlot} for "${visit.property.title}". Please confirm or reject.`,
+            });
+        }
+
+        res.json(visit);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Reschedule a visit (landlord direct change)
 // @route   PATCH /api/visits/:id/reschedule
 // @access  Private (Landlord)
 const rescheduleVisit = async (req, res) => {
@@ -136,7 +227,7 @@ const rescheduleVisit = async (req, res) => {
         }
 
         visit.visitDate = visitDate;
-        visit.timeSlot = timeSlot;
+        if (timeSlot) visit.timeSlot = timeSlot;
         visit.status = 'pending';
         await visit.save();
 
@@ -145,7 +236,7 @@ const rescheduleVisit = async (req, res) => {
             user: visit.tenant._id,
             icon: '📅',
             title: 'Visit Rescheduled',
-            message: `Your visit to ${visit.property.title} has been rescheduled to ${visitDate} at ${timeSlot}.`,
+            message: `Your visit to "${visit.property.title}" has been updated to ${visitDate} at ${timeSlot || visit.timeSlot}.`,
         });
 
         res.json(visit);
@@ -177,8 +268,8 @@ const cancelVisit = async (req, res) => {
             await Notification.create({
                 user: visit.property.landlord._id,
                 icon: '❌',
-                title: 'Appointment Cancelled',
-                message: `${req.user.firstName} ${req.user.lastName} has cancelled their visit to ${visit.property.title} on ${visit.visitDate}.`,
+                title: 'Appointment Cancelled/Declined',
+                message: `${req.user.firstName} ${req.user.lastName} has cancelled/declined their appointment for "${visit.property.title}".`,
             });
         }
 
@@ -188,4 +279,14 @@ const cancelVisit = async (req, res) => {
     }
 };
 
-module.exports = { bookVisit, getMyVisits, getVisitsForOwner, getVisitById, updateVisitStatus, rescheduleVisit, cancelVisit };
+module.exports = {
+    bookVisit,
+    getMyVisits,
+    getVisitsForOwner,
+    getVisitById,
+    updateVisitStatus,
+    requestReschedule,
+    selectAlternateDate,
+    rescheduleVisit,
+    cancelVisit
+};

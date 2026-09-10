@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import "../styles/ownerMessages.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function OwnerMessages() {
     const [conversations, setConversations] = useState([]);

@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { getProfile, updateProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture } = require('../controllers/userController');
+const { getProfile, updateProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture, upgradeSubscription } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/upload');
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.post('/upgrade-subscription', protect, upgradeSubscription);
 router.post('/profile/picture', protect, upload.single('profilePicture'), uploadProfilePicture);
 router.post('/wishlist/:propertyId', protect, addToWishlist);
 router.delete('/wishlist/:propertyId', protect, removeFromWishlist);
