@@ -1,9 +1,10 @@
 import OwnerNavbar from "../components/OwnerNavbar";
 import Footer from "../components/Footer";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../styles/addProperty.css";
 import api from "../utils/api";
 import { useNavigate } from "react-router-dom";
+import SubscriptionModal from "../components/SubscriptionModal";
 
 function AddProperty() {
   const navigate = useNavigate();
@@ -23,6 +24,17 @@ function AddProperty() {
     description: "",
   });
 
+  // Available Visit Dates management
+  const [availableDates, setAvailableDates] = useState([]);
+  const [dateInput, setDateInput] = useState("");
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [isPro, setIsPro] = useState(false);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    setIsPro(user.subscriptionPlan === "pro");
+  }, []);
+
   const AMENITY_OPTIONS = ["Parking", "Lift", "Wi-Fi", "Air Conditioning", "Power Backup", "Security", "Garden", "Gym"];
   const [selectedAmenities, setSelectedAmenities] = useState([]);
 
@@ -32,6 +44,27 @@ function AddProperty() {
     setSelectedAmenities((prev) =>
       prev.includes(amenity) ? prev.filter((a) => a !== amenity) : [...prev, amenity]
     );
+  };
+
+  const handleAddDate = () => {
+    if (!dateInput) return;
+    if (availableDates.includes(dateInput)) {
+      setError("This visit date has already been added.");
+      return;
+    }
+    // Subscription limit check: 3 dates free
+    if (!isPro && availableDates.length >= 3) {
+      setShowSubModal(true);
+      return;
+    }
+
+    setAvailableDates([...availableDates, dateInput]);
+    setDateInput("");
+    setError("");
+  };
+
+  const handleRemoveDate = (dateToRemove) => {
+    setAvailableDates(availableDates.filter((d) => d !== dateToRemove));
   };
 
   const handleImageUpload = (e) => {
@@ -56,6 +89,8 @@ function AddProperty() {
       });
       // Append amenities individually
       selectedAmenities.forEach((a) => formData.append("amenities", a));
+      // Append availableDates JSON
+      formData.append("availableDates", JSON.stringify(availableDates));
       files.forEach((file) => formData.append("images", file));
 
       await api.post("/properties", formData, {
@@ -64,6 +99,9 @@ function AddProperty() {
 
       navigate("/owner-properties");
     } catch (err) {
+      if (err.response?.data?.requiresSubscription) {
+        setShowSubModal(true);
+      }
       setError(err.response?.data?.message || "Failed to publish property.");
     } finally {
       setLoading(false);
@@ -80,17 +118,17 @@ function AddProperty() {
         <form className="property-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Property Title</label>
-            <input type="text" name="title" placeholder="Luxury Apartment" onChange={handleChange} />
+            <input type="text" name="title" placeholder="Luxury Apartment" onChange={handleChange} required />
           </div>
 
           <div className="form-group">
             <label>Location</label>
-            <input type="text" name="location" placeholder="Bhubaneswar" onChange={handleChange} />
+            <input type="text" name="location" placeholder="Bhubaneswar" onChange={handleChange} required />
           </div>
 
           <div className="form-group">
             <label>Monthly Rent (₹)</label>
-            <input type="number" name="rent" placeholder="18000" onChange={handleChange} />
+            <input type="number" name="rent" placeholder="18000" onChange={handleChange} required />
           </div>
 
           <div className="form-group">
@@ -118,6 +156,102 @@ function AddProperty() {
             <input type="number" name="bathrooms" placeholder="1" onChange={handleChange} />
           </div>
 
+          {/* Available Visit Dates with 3-Date Free Tier Limit & Subscription */}
+          <div className="form-group" style={{ background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+              <label style={{ fontWeight: "700", margin: 0 }}>📅 Available Visit Dates for Tenants</label>
+              <div style={{ fontSize: "12px" }}>
+                {isPro ? (
+                  <span style={{ background: "#fef3c7", color: "#b45309", padding: "3px 8px", borderRadius: "6px", fontWeight: "700" }}>
+                    ⭐ Pro (Unlimited Dates)
+                  </span>
+                ) : (
+                  <span style={{ color: availableDates.length >= 3 ? "#b45309" : "#64748b", fontWeight: "600" }}>
+                    Free Limit: {availableDates.length}/3 dates used
+                    {availableDates.length >= 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSubModal(true)}
+                        style={{ marginLeft: "8px", background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", textDecoration: "underline" }}
+                      >
+                        Upgrade to Pro
+                      </button>
+                    )}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <p style={{ fontSize: "13px", color: "#64748b", margin: "0 0 12px 0" }}>
+              Select specific dates when you are available for tenants to schedule a house visit. Tenants will choose from these dates.
+            </p>
+
+            <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "12px" }}>
+              <input
+                type="date"
+                value={dateInput}
+                onChange={(e) => setDateInput(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                style={{ maxWidth: "220px" }}
+              />
+              <button
+                type="button"
+                onClick={handleAddDate}
+                style={{
+                  background: "#2563eb",
+                  color: "#fff",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                }}
+              >
+                + Add Date
+              </button>
+            </div>
+
+            {availableDates.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {availableDates.map((date) => (
+                  <span
+                    key={date}
+                    style={{
+                      background: "#eff6ff",
+                      color: "#1e40af",
+                      border: "1px solid #bfdbfe",
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                    }}
+                  >
+                    📅 {date}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDate(date)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        cursor: "pointer",
+                        fontWeight: "700",
+                        fontSize: "14px",
+                        padding: 0,
+                        lineHeight: 1,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="form-group">
             <label>Amenities</label>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginTop: "8px" }}>
@@ -136,7 +270,7 @@ function AddProperty() {
 
           <div className="form-group">
             <label>Description</label>
-            <textarea name="description" rows="5" placeholder="Describe your property..." onChange={handleChange} />
+            <textarea name="description" rows="5" placeholder="Describe your property..." onChange={handleChange} required />
           </div>
 
           <div className="form-group">
@@ -157,6 +291,18 @@ function AddProperty() {
           </div>
         </form>
       </div>
+
+      <SubscriptionModal
+        isOpen={showSubModal}
+        onClose={() => setShowSubModal(false)}
+        onUpgraded={() => {
+          setIsPro(true);
+          if (dateInput && !availableDates.includes(dateInput)) {
+            setAvailableDates([...availableDates, dateInput]);
+            setDateInput("");
+          }
+        }}
+      />
       <Footer />
     </div>
   );

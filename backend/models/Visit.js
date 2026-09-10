@@ -9,9 +9,11 @@ const visitSchema = new mongoose.Schema({
     additionalNote: { type: String, default: '' },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed'],
+        enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed', 'reschedule_requested'],
         default: 'pending'
     },
+    ownerNote:        { type: String, default: '' },
+    unavailableDates: [{ type: String }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Visit', visitSchema);

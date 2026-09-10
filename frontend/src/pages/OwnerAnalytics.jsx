@@ -5,9 +5,9 @@ import "../styles/ownerAnalytics.css";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 function getImageSrc(img) {
-  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (!img) return null;
   if (img.startsWith("/uploads")) return BACKEND_URL + img;
   return img;
 }
@@ -74,7 +74,13 @@ function OwnerAnalytics() {
           {stats?.mostViewed && (
             <div className="top-property">
               <h2>Most Viewed Property</h2>
-              <img src={getImageSrc(stats.mostViewed.images?.[0])} alt="House" />
+              {getImageSrc(stats.mostViewed.images?.[0]) ? (
+                <img src={getImageSrc(stats.mostViewed.images?.[0])} alt="House" />
+              ) : (
+                <div style={{ height: "160px", background: "#f1f5f9", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", marginBottom: "12px" }}>
+                  🏠 No photo
+                </div>
+              )}
               <h3>{stats.mostViewed.title}</h3>
               <p>👁 {stats.mostViewed.views} Views</p>
             </div>

@@ -6,3 +6,5 @@ frontend/dist/
 .env.*
 !.env.example
 backend/uploads/
+powershell.bat
+*/powershell.bat

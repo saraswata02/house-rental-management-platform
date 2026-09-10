@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema({
         pincode:  { type: String, default: '' },
     },
     wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Property' }],
+    subscriptionPlan: { type: String, enum: ['free', 'pro'], default: 'free' },
 }, { timestamps: true });
 
 // Auto-generate userId before saving

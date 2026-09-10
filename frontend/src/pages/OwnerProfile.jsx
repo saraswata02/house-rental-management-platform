@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import "../styles/ownerProfile.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function OwnerProfile() {
   const [editing, setEditing] = useState(false);

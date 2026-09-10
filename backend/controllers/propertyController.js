@@ -86,7 +86,30 @@ const getMyProperties = async (req, res) => {
 // @access  Private (Landlord)
 const createProperty = async (req, res) => {
     try {
-        const { title, description, location, rent, bhk, propertyType, amenities, lat, lng, bathrooms } = req.body;
+        const { title, description, location, rent, bhk, propertyType, amenities, lat, lng, bathrooms, availableDates } = req.body;
+
+        let dates = [];
+        if (availableDates) {
+            if (Array.isArray(availableDates)) {
+                dates = availableDates;
+            } else if (typeof availableDates === 'string') {
+                try {
+                    const parsed = JSON.parse(availableDates);
+                    dates = Array.isArray(parsed) ? parsed : [availableDates];
+                } catch {
+                    dates = availableDates.split(',').map(d => d.trim()).filter(Boolean);
+                }
+            }
+        }
+
+        // Subscription check: Free tier max 3 dates
+        const userPlan = req.user.subscriptionPlan || 'free';
+        if (userPlan === 'free' && dates.length > 3) {
+            return res.status(403).json({
+                message: 'Free tier allows up to 3 available visit dates. Please upgrade to Pro for unlimited dates.',
+                requiresSubscription: true
+            });
+        }
 
         const images = req.files ? req.files.map(f => `/uploads/${f.filename}`) : [];
 
@@ -102,6 +125,7 @@ const createProperty = async (req, res) => {
             lat: lat ? Number(lat) : 20.2961,
             lng: lng ? Number(lng) : 85.8245,
             bathrooms: bathrooms ? Number(bathrooms) : 1,
+            availableDates: dates,
             landlord: req.user._id,
         });
 
@@ -110,7 +134,7 @@ const createProperty = async (req, res) => {
             user: req.user._id,
             icon: '🏠',
             title: 'Property Listed',
-            message: `${title} has been published successfully.`,
+            message: `${title} has been published successfully with ${dates.length} available visit date(s).`,
         });
 
         res.status(201).json(property);
@@ -131,7 +155,7 @@ const updateProperty = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to update this property' });
         }
 
-        const { title, description, location, rent, bhk, amenities, availabilityStatus } = req.body;
+        const { title, description, location, rent, bhk, amenities, availabilityStatus, availableDates } = req.body;
         if (title) property.title = title;
         if (description) property.description = description;
         if (location) property.location = location;
@@ -139,6 +163,27 @@ const updateProperty = async (req, res) => {
         if (bhk) property.bhk = bhk;
         if (amenities) property.amenities = Array.isArray(amenities) ? amenities : amenities.split(',');
         if (availabilityStatus) property.availabilityStatus = availabilityStatus;
+        if (availableDates !== undefined) {
+            let dates = [];
+            if (Array.isArray(availableDates)) {
+                dates = availableDates;
+            } else if (typeof availableDates === 'string') {
+                try {
+                    const parsed = JSON.parse(availableDates);
+                    dates = Array.isArray(parsed) ? parsed : [availableDates];
+                } catch {
+                    dates = availableDates.split(',').map(d => d.trim()).filter(Boolean);
+                }
+            }
+            const userPlan = req.user.subscriptionPlan || 'free';
+            if (userPlan === 'free' && dates.length > 3) {
+                return res.status(403).json({
+                    message: 'Free tier allows up to 3 available visit dates. Please upgrade to Pro for unlimited dates.',
+                    requiresSubscription: true
+                });
+            }
+            property.availableDates = dates;
+        }
         if (req.files && req.files.length > 0) {
             property.images = req.files.map(f => `/uploads/${f.filename}`);
         }

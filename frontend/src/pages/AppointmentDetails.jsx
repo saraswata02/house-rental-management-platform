@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import ConfirmationModal from "../components/ConfirmationModal";
-import RescheduleModal from "../components/RescheduleModal";
+import ScheduleDateModal from "../components/ScheduleDateModal";
 import "../styles/appointmentDetails.css";
 import api from "../utils/api";
 
@@ -140,21 +140,22 @@ function AppointmentDetails() {
                                 className="approve-btn"
                                 onClick={() => { setAction("Approve"); setModalOpen(true); }}
                             >
-                                Approve
+                                ✓ Approve
+                            </button>
+
+                            <button
+                                className="reschedule-btn"
+                                style={{ background: "#d97706" }}
+                                onClick={() => setRescheduleModalOpen(true)}
+                            >
+                                📅 Schedule Date
                             </button>
 
                             <button
                                 className="reject-btn"
                                 onClick={() => { setAction("Reject"); setModalOpen(true); }}
                             >
-                                Reject
-                            </button>
-
-                            <button
-                                className="reschedule-btn"
-                                onClick={() => setRescheduleModalOpen(true)}
-                            >
-                                Reschedule
+                                ✕ Reject
                             </button>
                         </div>
                     )}
@@ -170,10 +171,13 @@ function AppointmentDetails() {
                 onConfirm={() => handleAction(action)}
             />
 
-            <RescheduleModal
+            <ScheduleDateModal
                 isOpen={rescheduleModalOpen}
+                visit={visit}
                 onClose={() => setRescheduleModalOpen(false)}
-                onReschedule={handleReschedule}
+                onRescheduleRequested={(id, note) => {
+                    setVisit({ ...visit, status: "reschedule_requested", ownerNote: note });
+                }}
             />
 
             <Footer />

@@ -127,4 +127,24 @@ const uploadProfilePicture = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture };
+// @desc    Upgrade subscription plan (e.g. Free to Pro)
+// @route   POST /api/users/upgrade-subscription
+// @access  Private (Landlord)
+const upgradeSubscription = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.subscriptionPlan = 'pro';
+        await user.save();
+
+        res.json({
+            message: 'Successfully upgraded to Pro! You now have unlimited visit dates.',
+            subscriptionPlan: user.subscriptionPlan
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { getProfile, updateProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture, upgradeSubscription };

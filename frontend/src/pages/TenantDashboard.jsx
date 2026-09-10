@@ -8,9 +8,9 @@ import { useNavigate } from "react-router-dom";
 import "../styles/tenantDashboard.css";
 import api from "../utils/api";
 
-const BACKEND_URL = "http://localhost:5000";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 function getImageSrc(img) {
-  if (!img) return "/houses/WhatsApp Image 2026-06-30 at 10.55.17 AM.jpeg";
+  if (!img) return null;
   if (img.startsWith("/uploads")) return BACKEND_URL + img;
   return img;
 }
@@ -26,7 +26,7 @@ function TenantDashboard() {
       try {
         const { data } = await api.get("/properties");
         setFeatured(data.slice(0, 6));
-        setRecent(data.slice(0, 3));
+        setRecent(data.slice(0, 6));
       } catch (err) {
         console.error(err);
       } finally {
@@ -106,6 +106,8 @@ function TenantDashboard() {
           <div className="property-grid">
             {loading ? (
               <p>Loading...</p>
+            ) : recent.length === 0 ? (
+              <p>No properties added recently.</p>
             ) : (
               recent.map((p) => (
                 <PropertyCard
