@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import OwnerNavbar from "../components/OwnerNavbar";
 import Footer from "../components/Footer";
 import { useState, useEffect } from "react";
 import BookVisitModal from "../components/BookVisitModal";
@@ -21,8 +22,13 @@ function PropertyDetails() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [userRole, setUserRole] = useState("tenant");
+  const [hasBooked, setHasBooked] = useState(false);
 
   useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (user.role) setUserRole(user.role);
+
     const fetchProperty = async () => {
       try {
         const { data } = await api.get(`/properties/${id}`);
@@ -30,6 +36,21 @@ function PropertyDetails() {
         if (data.images && data.images.length > 0) {
           setSelectedImage(data.images[0]);
         }
+        
+        // Fetch visits if user is tenant to check if they already booked
+        if (user.role === "tenant") {
+          try {
+            const visitRes = await api.get("/visits/my-visits");
+            const booked = visitRes.data.some(v => 
+              (v.property?._id === id || v.property === id) && 
+              v.status !== 'cancelled' && v.status !== 'rejected'
+            );
+            setHasBooked(booked);
+          } catch (err) {
+            console.error("Error fetching my visits:", err);
+          }
+        }
+
       } catch (err) {
         console.error("Error loading property:", err);
       } finally {
@@ -46,10 +67,10 @@ function PropertyDetails() {
 
   return (
     <div className="property-details-page">
-      <Navbar />
+      {userRole === "landlord" ? <OwnerNavbar /> : <Navbar />}
 
       <div className="property-details-container">
-        <button className="back1-btn" onClick={() => navigate("/properties")}>
+        <button className="back1-btn" onClick={() => navigate(userRole === "landlord" ? "/owner-properties" : "/properties")}>
           ← Back to Properties
         </button>
 
@@ -125,45 +146,55 @@ function PropertyDetails() {
               </div>
             </section>
 
-            <section className="property-map">
-              <h2>Location</h2>
-              <PropertyMap lat={property.lat} lng={property.lng} />
-              <div className="map-buttons">
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="direction-btn"
-                >
-                  🧭 Get Directions
-                </a>
-              </div>
-            </section>
+            {userRole !== "landlord" && (
+              <>
+                <section className="property-map">
+                  <h2>Location</h2>
+                  <PropertyMap lat={property.lat} lng={property.lng} />
+                  <div className="map-buttons">
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${property.lat},${property.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="direction-btn"
+                    >
+                      🧭 Get Directions
+                    </a>
+                  </div>
+                </section>
 
-            <section className="owner-section">
-              <h2>Owner Information</h2>
-              <div className="owner-card">
-                <img
-                  src={property.landlord?.profilePicture?.startsWith("/uploads") ? BACKEND_URL + property.landlord.profilePicture : property.landlord?.profilePicture || "/default-profile.png"}
-                  alt="Owner"
-                  className="owner-image"
-                />
-                <div className="owner-info">
-                  <h3>{property.landlord?.firstName} {property.landlord?.lastName}</h3>
-                  <p className="owner-badge">✔ Verified Owner</p>
-                  <p>📞 {property.landlord?.phone || "Not available"}</p>
-                </div>
-                <div className="owner-actions">
-                  <button className="chat-btn" onClick={() => {
-                    sessionStorage.setItem('chatPartnerId', property.landlord?._id);
-                    navigate('/tenant-messages');
-                  }}>💬 Chat</button>
-                  <button className="visit-btn" onClick={() => setShowBookingModal(true)}>
-                    📅 Book Visit
-                  </button>
-                </div>
-              </div>
-            </section>
+                <section className="owner-section">
+                  <h2>Owner Information</h2>
+                  <div className="owner-card">
+                    <img
+                      src={property.landlord?.profilePicture?.startsWith("/uploads") ? BACKEND_URL + property.landlord.profilePicture : property.landlord?.profilePicture || "/default-profile.png"}
+                      alt="Owner"
+                      className="owner-image"
+                    />
+                    <div className="owner-info">
+                      <h3>{property.landlord?.firstName} {property.landlord?.lastName}</h3>
+                      <p className="owner-badge">✔ Verified Owner</p>
+                    </div>
+                    <div className="owner-actions">
+                      <button className="chat-btn" onClick={() => {
+                        sessionStorage.setItem('chatPartnerId', property.landlord?._id);
+                        navigate('/tenant-messages');
+                      }}>💬 Chat</button>
+                      
+                      {hasBooked ? (
+                        <button className="visit-btn" disabled style={{ background: "#94a3b8", cursor: "not-allowed", opacity: 0.8 }}>
+                          ✅ Booked for Visit
+                        </button>
+                      ) : (
+                        <button className="visit-btn" onClick={() => setShowBookingModal(true)}>
+                          📅 Book Visit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              </>
+            )}
           </div>
         </div>
       </div>

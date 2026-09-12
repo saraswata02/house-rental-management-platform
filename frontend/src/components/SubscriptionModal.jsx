@@ -13,12 +13,15 @@ function SubscriptionModal({ isOpen, onClose, onUpgraded }) {
     try {
       setLoading(true);
       setError("");
-      const { data } = await api.post("/users/upgrade-subscription");
+      
+      // MOCK FOR TESTING: Faking the API call and NOT updating localStorage 
+      // so it resets to initial (free) upon page refresh.
+      // const { data } = await api.post("/users/upgrade-subscription");
+      // const user = JSON.parse(localStorage.getItem("user") || "{}");
+      // user.subscriptionPlan = "pro";
+      // localStorage.setItem("user", JSON.stringify(user));
 
-      // Update cached user in localStorage if exists
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      user.subscriptionPlan = "pro";
-      localStorage.setItem("user", JSON.stringify(user));
+      await new Promise(resolve => setTimeout(resolve, 800)); // simulate network delay
 
       setSuccess(true);
       setTimeout(() => {
@@ -27,7 +30,7 @@ function SubscriptionModal({ isOpen, onClose, onUpgraded }) {
         onClose();
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to upgrade subscription.");
+      setError("Failed to upgrade subscription.");
     } finally {
       setLoading(false);
     }

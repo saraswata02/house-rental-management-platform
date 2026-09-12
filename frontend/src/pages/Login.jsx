@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "../components/Footer";
 import AuthNavbar from "../components/AuthNavbar";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,16 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!error) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setError("");
+    }, 12000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [error]);
 
   const handleLogin = async () => {
     if (!email || !password) {

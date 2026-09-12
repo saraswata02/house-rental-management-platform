@@ -16,8 +16,19 @@ function EditProperty() {
   const [error, setError] = useState("");
 
   const [form, setForm] = useState({
-    title: "", location: "", rent: "", bhk: "1 BHK", description: "",
-    availabilityStatus: "available", propertyType: "Apartment", bathrooms: 1, amenities: ""
+    title: "",
+    state: "",
+    district: "",
+    city: "",
+    location: "",
+    preferredLifestyle: "Family",
+    rent: "",
+    bhk: "1 BHK",
+    description: "",
+    availabilityStatus: "available",
+    propertyType: "Apartment",
+    bathrooms: 1,
+    amenities: ""
   });
 
   // Available Visit Dates management
@@ -27,8 +38,11 @@ function EditProperty() {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setIsPro(user.subscriptionPlan === "pro");
+    // MOCK FOR TESTING: Always start as 'free' so Pro mode resets on refresh
+    setIsPro(false);
+
+    // const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // setIsPro(user.subscriptionPlan === "pro");
   }, []);
 
   useEffect(() => {
@@ -36,9 +50,18 @@ function EditProperty() {
       try {
         const { data } = await api.get(`/properties/${id}`);
         setForm({
-          title: data.title, location: data.location, rent: data.rent, bhk: data.bhk,
-          description: data.description, availabilityStatus: data.availabilityStatus || "available",
-          propertyType: data.propertyType || "Apartment", bathrooms: data.bathrooms || 1,
+          title: data.title,
+          state: data.state || "",
+          district: data.district || "",
+          city: data.city || "",
+          location: data.location || "",
+          preferredLifestyle: data.preferredLifestyle || "Family",
+          rent: data.rent,
+          bhk: data.bhk,
+          description: data.description,
+          availabilityStatus: data.availabilityStatus || "available",
+          propertyType: data.propertyType || "Apartment",
+          bathrooms: data.bathrooms || 1,
           amenities: (data.amenities || []).join(", "),
         });
         setAvailableDates(data.availableDates || []);
@@ -124,9 +147,34 @@ function EditProperty() {
             <label>Property Title</label>
             <input type="text" name="title" value={form.title} onChange={handleChange} required />
           </div>
+          <div className="form-group-row">
+            <div className="form-group">
+              <label>State</label>
+              <input type="text" name="state" value={form.state} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>District</label>
+              <input type="text" name="district" value={form.district} onChange={handleChange} required />
+            </div>
+          </div>
+          <div className="form-group-row">
+            <div className="form-group">
+              <label>City</label>
+              <input type="text" name="city" value={form.city} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Location / Area</label>
+              <input type="text" name="location" value={form.location} onChange={handleChange} required />
+            </div>
+          </div>
           <div className="form-group">
-            <label>Location</label>
-            <input type="text" name="location" value={form.location} onChange={handleChange} required />
+            <label>Preferred Lifestyle</label>
+            <select name="preferredLifestyle" value={form.preferredLifestyle} onChange={handleChange}>
+              <option value="Family">Family</option>
+              <option value="Student">Student</option>
+              <option value="Bachelor">Bachelor</option>
+              <option value="Working Professional">Working Professional</option>
+            </select>
           </div>
           <div className="form-group">
             <label>Monthly Rent (₹)</label>

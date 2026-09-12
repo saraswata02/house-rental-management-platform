@@ -1,6 +1,12 @@
 const Message = require('../models/Message');
 const User = require('../models/User');
 
+const isSender = (message, userId) => {
+    if (!message) return false;
+    const senderId = message.sender?._id ? message.sender._id.toString() : message.sender?.toString();
+    return senderId === userId.toString();
+};
+
 // @desc    Get all unique conversations for the current user
 // @route   GET /api/messages/conversations
 // @access  Private
@@ -91,4 +97,85 @@ const sendMessage = async (req, res) => {
     }
 };
 
-module.exports = { getConversations, getChatMessages, sendMessage };
+// @desc    Edit a message sent by the current user
+// @route   PUT /api/messages/:messageId
+// @access  Private
+const updateMessage = async (req, res) => {
+    try {
+        const { text } = req.body;
+        const message = await Message.findById(req.params.messageId);
+
+        if (!message) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        if (!isSender(message, req.user._id)) {
+            return res.status(403).json({ message: 'You can only edit your own messages' });
+        }
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({ message: 'Message text is required' });
+        }
+
+        message.text = text.trim();
+        message.editedAt = new Date();
+        await message.save();
+
+        res.json(message);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete a message sent by the current user
+// @route   DELETE /api/messages/:messageId
+// @access  Private
+const deleteMessage = async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+
+        if (!message) {
+            return res.status(404).json({ message: 'Message not found' });
+        }
+
+        if (!isSender(message, req.user._id)) {
+            return res.status(403).json({ message: 'You can only delete your own messages' });
+        }
+
+        await message.deleteOne();
+
+        res.json({ message: 'Message deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete the entire conversation between current user and a partner
+// @route   DELETE /api/messages/conversation/:userId
+// @access  Private
+const deleteConversation = async (req, res) => {
+    try {
+        const partnerId = req.params.userId;
+        const userId = req.user._id;
+
+        await Message.deleteMany({
+            $or: [
+                { sender: userId, receiver: partnerId },
+                { sender: partnerId, receiver: userId },
+            ],
+        });
+
+        res.json({ message: 'Conversation deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = {
+    getConversations,
+    getChatMessages,
+    sendMessage,
+    updateMessage,
+    deleteMessage,
+    deleteConversation,
+};

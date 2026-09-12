@@ -123,8 +123,22 @@ function Signup() {
 
             {error && <p style={{ color: "red" }}>{error}</p>}
 
-            <input type="password" name="password" placeholder="Create Password" onChange={handleChange} />
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" onChange={handleChange} />
+            <input
+              type="password"
+              name="password"
+              value={form.password}
+              autoComplete="new-password"
+              placeholder="Create Password"
+              onChange={handleChange}
+            />
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              autoComplete="new-password"
+              placeholder="Confirm Password"
+              onChange={handleChange}
+            />
 
             <div className="button-row">
               <button className="back-btn" onClick={() => setStep(1)}>Back</button>

@@ -15,7 +15,11 @@ function AddProperty() {
 
   const [form, setForm] = useState({
     title: "",
+    state: "",
+    district: "",
+    city: "",
     location: "",
+    preferredLifestyle: "Family",
     rent: "",
     bhk: "1 BHK",
     propertyType: "Apartment",
@@ -31,8 +35,11 @@ function AddProperty() {
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setIsPro(user.subscriptionPlan === "pro");
+    // MOCK FOR TESTING: Always start as 'free' so Pro mode resets on refresh
+    setIsPro(false);
+    
+    // const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // setIsPro(user.subscriptionPlan === "pro");
   }, []);
 
   const AMENITY_OPTIONS = ["Parking", "Lift", "Wi-Fi", "Air Conditioning", "Power Backup", "Security", "Garden", "Gym"];
@@ -75,7 +82,7 @@ function AddProperty() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.location || !form.rent || !form.description) {
+    if (!form.title || !form.state || !form.district || !form.city || !form.location || !form.preferredLifestyle || !form.rent || !form.description) {
       setError("Please fill all required fields.");
       return;
     }
@@ -121,9 +128,36 @@ function AddProperty() {
             <input type="text" name="title" placeholder="Luxury Apartment" onChange={handleChange} required />
           </div>
 
+          <div className="form-group-row">
+            <div className="form-group">
+              <label>State</label>
+              <input type="text" name="state" placeholder="Odisha" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>District</label>
+              <input type="text" name="district" placeholder="Khordha" onChange={handleChange} required />
+            </div>
+          </div>
+
+          <div className="form-group-row">
+            <div className="form-group">
+              <label>City</label>
+              <input type="text" name="city" placeholder="Bhubaneswar" onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Location / Area</label>
+              <input type="text" name="location" placeholder="Patia, Khandagiri" onChange={handleChange} required />
+            </div>
+          </div>
+
           <div className="form-group">
-            <label>Location</label>
-            <input type="text" name="location" placeholder="Bhubaneswar" onChange={handleChange} required />
+            <label>Preferred Lifestyle</label>
+            <select name="preferredLifestyle" value={form.preferredLifestyle} onChange={handleChange}>
+              <option value="Family">Family</option>
+              <option value="Student">Student</option>
+              <option value="Bachelor">Bachelor</option>
+              <option value="Working Professional">Working Professional</option>
+            </select>
           </div>
 
           <div className="form-group">

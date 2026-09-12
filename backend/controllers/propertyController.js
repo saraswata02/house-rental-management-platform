@@ -86,7 +86,27 @@ const getMyProperties = async (req, res) => {
 // @access  Private (Landlord)
 const createProperty = async (req, res) => {
     try {
-        const { title, description, location, rent, bhk, propertyType, amenities, lat, lng, bathrooms, availableDates } = req.body;
+        const {
+            title,
+            description,
+            state,
+            district,
+            city,
+            location,
+            preferredLifestyle,
+            rent,
+            bhk,
+            propertyType,
+            amenities,
+            lat,
+            lng,
+            bathrooms,
+            availableDates,
+        } = req.body;
+
+        if (!title || !description || !state || !district || !city || !location || !preferredLifestyle || !rent) {
+            return res.status(400).json({ message: 'Please fill all required property details.' });
+        }
 
         let dates = [];
         if (availableDates) {
@@ -116,7 +136,11 @@ const createProperty = async (req, res) => {
         const property = await Property.create({
             title,
             description,
+            state,
+            district,
+            city,
             location,
+            preferredLifestyle,
             rent: Number(rent),
             bhk,
             propertyType: propertyType || 'Apartment',
@@ -155,10 +179,14 @@ const updateProperty = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to update this property' });
         }
 
-        const { title, description, location, rent, bhk, amenities, availabilityStatus, availableDates } = req.body;
+        const { title, description, state, district, city, location, preferredLifestyle, rent, bhk, amenities, availabilityStatus, availableDates } = req.body;
         if (title) property.title = title;
         if (description) property.description = description;
+        if (state) property.state = state;
+        if (district) property.district = district;
+        if (city) property.city = city;
         if (location) property.location = location;
+        if (preferredLifestyle) property.preferredLifestyle = preferredLifestyle;
         if (rent) property.rent = Number(rent);
         if (bhk) property.bhk = bhk;
         if (amenities) property.amenities = Array.isArray(amenities) ? amenities : amenities.split(',');

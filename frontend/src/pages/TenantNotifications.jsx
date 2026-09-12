@@ -34,6 +34,13 @@ function TenantNotifications() {
     setNotifications(notifications.filter((n) => !n.isRead));
   };
 
+  const markRead = async (notificationId) => {
+    await api.patch(`/notifications/${notificationId}/read`);
+    setNotifications(notifications.map((notification) => (
+      notification._id === notificationId ? { ...notification, isRead: true } : notification
+    )));
+  };
+
   return (
     <div className="tenant-notifications-page">
       <Navbar />
@@ -75,6 +82,25 @@ function TenantNotifications() {
                     <span>{new Date(item.createdAt).toLocaleString()}</span>
                   </div>
                 </div>
+
+                {!item.isRead && (
+                  <button
+                    type="button"
+                    onClick={() => markRead(item._id)}
+                    style={{
+                      background: "transparent",
+                      border: "1px solid #2563eb",
+                      color: "#2563eb",
+                      padding: "6px 10px",
+                      borderRadius: "6px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      marginLeft: "12px",
+                    }}
+                  >
+                    Mark as read
+                  </button>
+                )}
 
                 {isAppointment && (
                   <button

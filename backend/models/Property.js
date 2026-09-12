@@ -3,7 +3,15 @@ const mongoose = require('mongoose');
 const propertySchema = new mongoose.Schema({
     title:       { type: String, required: true, trim: true },
     description: { type: String, required: true },
-    location:    { type: String, required: true },
+    state:       { type: String, required: true, trim: true },
+    district:    { type: String, required: true, trim: true },
+    city:        { type: String, required: true, trim: true },
+    location:    { type: String, required: true, trim: true },
+    preferredLifestyle: {
+        type: String,
+        enum: ['Family', 'Student', 'Bachelor', 'Working Professional'],
+        required: true,
+    },
     rent:        { type: Number, required: true },
     bhk:         { type: String, enum: ['1 BHK', '2 BHK', '3 BHK', '4 BHK'], required: true },
     propertyType:{ type: String, default: 'Apartment' },

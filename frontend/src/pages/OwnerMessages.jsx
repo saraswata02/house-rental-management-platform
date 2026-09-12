@@ -13,10 +13,23 @@ function OwnerMessages() {
     const [messageText, setMessageText] = useState("");
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [editingText, setEditingText] = useState("");
     const chatBodyRef = useRef(null);
 
     // Current logged-in user
     const currentUser = JSON.parse(localStorage.getItem("user"));
+    const isOwnMessage = (msg) => msg.sender === currentUser?._id || msg.sender?._id === currentUser?._id;
+
+    const refreshConversations = async () => {
+        const { data } = await api.get("/messages/conversations");
+        setConversations(data);
+        setSelectedConv((prev) => {
+            if (!prev) return data[0] || null;
+            const updated = data.find((conv) => conv.partner._id === prev.partner._id);
+            return updated || data[0] || null;
+        });
+    };
 
     // Load all conversations on mount
     useEffect(() => {
@@ -36,22 +49,26 @@ function OwnerMessages() {
         fetchConversations();
     }, []);
 
-    // Load messages when a conversation is selected
+    // Load messages when a conversation is selected (with polling)
     useEffect(() => {
         if (!selectedConv) return;
         const fetchMessages = async () => {
             try {
                 const { data } = await api.get(`/messages/${selectedConv.partner._id}`);
                 setMessages(data);
-                setTimeout(() => {
-                    chatBodyRef.current?.scrollTo({ top: chatBodyRef.current.scrollHeight, behavior: "smooth" });
-                }, 100);
             } catch (err) {
                 console.error("Error loading messages:", err);
             }
         };
         fetchMessages();
+        const interval = setInterval(fetchMessages, 3000);
+        return () => clearInterval(interval);
     }, [selectedConv]);
+
+    // Auto-scroll on new messages
+    useEffect(() => {
+        chatBodyRef.current?.scrollTo({ top: chatBodyRef.current.scrollHeight, behavior: "smooth" });
+    }, [messages.length]);
 
     const handleSend = async () => {
         if (!messageText.trim() || !selectedConv) return;
@@ -77,6 +94,43 @@ function OwnerMessages() {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSend();
+        }
+    };
+
+    const handleDeleteMessage = async (messageId) => {
+        if (!window.confirm("Delete this message?")) return;
+        try {
+            await api.delete(`/messages/${messageId}`);
+            setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+            await refreshConversations();
+        } catch (err) {
+            console.error("Failed to delete message:", err);
+        }
+    };
+
+    const handleUpdateMessage = async (messageId) => {
+        if (!editingText.trim()) return;
+        try {
+            const { data } = await api.put(`/messages/${messageId}`, { text: editingText });
+            setMessages((prev) => prev.map((msg) => (msg._id === messageId ? data : msg)));
+            setEditingMessageId(null);
+            setEditingText("");
+        } catch (err) {
+            console.error("Failed to edit message:", err);
+        }
+    };
+
+    const handleDeleteConversation = async () => {
+        if (!selectedConv) return;
+        if (!window.confirm(`Delete this conversation with ${selectedConv.partner.firstName}?`)) return;
+        try {
+            await api.delete(`/messages/conversation/${selectedConv.partner._id}`);
+            const remaining = conversations.filter((conv) => conv.partner._id !== selectedConv.partner._id);
+            setConversations(remaining);
+            setMessages([]);
+            setSelectedConv(remaining[0] || null);
+        } catch (err) {
+            console.error("Failed to delete conversation:", err);
         }
     };
 
@@ -136,22 +190,56 @@ function OwnerMessages() {
                                     />
                                     <div>
                                         <h2>{selectedConv.partner.firstName} {selectedConv.partner.lastName}</h2>
-                                        <p>{selectedConv.partner.role === "tenant" ? "Tenant" : "Property Owner"}</p>
+                                        <p>Tenant</p>
                                     </div>
                                 </div>
+                                <button className="delete-conversation-btn" onClick={handleDeleteConversation}>Delete Chat</button>
                             </div>
 
                             <div className="chat-body" ref={chatBodyRef}>
-                                {messages.map((msg) => (
-                                    <div
-                                        key={msg._id}
-                                        className={msg.sender === currentUser?._id || msg.sender?._id === currentUser?._id
-                                            ? "sent-message"
-                                            : "received-message"}
-                                    >
-                                        {msg.text}
-                                    </div>
-                                ))}
+                                {messages.map((msg) => {
+                                    const own = isOwnMessage(msg);
+                                    return (
+                                        <div
+                                            key={msg._id}
+                                            className={own ? "sent-message" : "received-message"}
+                                        >
+                                            {editingMessageId === msg._id ? (
+                                                <div className="message-edit-box">
+                                                    <input
+                                                        value={editingText}
+                                                        onChange={(e) => setEditingText(e.target.value)}
+                                                        className="message-edit-input"
+                                                    />
+                                                    <div className="message-edit-actions">
+                                                        <button onClick={() => handleUpdateMessage(msg._id)} className="save-message-btn">Save</button>
+                                                        <button onClick={() => { setEditingMessageId(null); setEditingText(""); }} className="cancel-message-btn">Cancel</button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="message-content">{msg.text}</div>
+                                                    {own && (
+                                                        <div className="message-control-row">
+                                                            <button
+                                                                className="message-action-btn"
+                                                                onClick={() => { setEditingMessageId(msg._id); setEditingText(msg.text); }}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                className="message-action-btn danger"
+                                                                onClick={() => handleDeleteMessage(msg._id)}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
 
                             <div className="chat-input">

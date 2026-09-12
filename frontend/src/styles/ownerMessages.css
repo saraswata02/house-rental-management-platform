@@ -259,6 +259,76 @@
 
 }
 
+.message-content {
+    word-break: break-word;
+}
+
+.message-control-row {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.message-action-btn {
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: inherit;
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.message-action-btn.danger {
+    background: rgba(220, 38, 38, 0.2);
+}
+
+.message-edit-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 220px;
+}
+
+.message-edit-input {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.message-edit-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.save-message-btn,
+.cancel-message-btn,
+.delete-conversation-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.save-message-btn {
+    background: #22c55e;
+    color: white;
+}
+
+.cancel-message-btn {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+.delete-conversation-btn {
+    background: #ef4444;
+    color: white;
+}
+
 .received-message{
 
     width:fit-content;
