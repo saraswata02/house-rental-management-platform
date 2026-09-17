@@ -68,7 +68,7 @@
 
     width:92%;
 
-    margin:40px auto;
+    margin:0 auto 40px;
 
     display:flex;
 
@@ -76,6 +76,7 @@
 
     align-items:flex-start;
 
+    padding-top:120px;
     padding-bottom:140px;
 
 }
