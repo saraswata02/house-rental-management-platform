@@ -250,6 +250,12 @@ function TenantMessages() {
                                             ) : (
                                                 <>
                                                     <div className="message-content">{msg.text}</div>
+                                                    <div className="message-time">
+                                                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                                                            hour: "numeric",
+                                                            minute: "2-digit",
+                                                        })}
+                                                    </div>
                                                     {openMessageMenuId === msg._id && (
                                                         <div className="message-control-row">
                                                             {own && (

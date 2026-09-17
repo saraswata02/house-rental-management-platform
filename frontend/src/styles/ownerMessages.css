@@ -263,6 +263,13 @@
     word-break: break-word;
 }
 
+.message-time {
+    margin-top: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+    text-align: right;
+}
+
 .message-control-row {
     display: flex;
     gap: 8px;

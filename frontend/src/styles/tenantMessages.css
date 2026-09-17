@@ -238,6 +238,13 @@
 
 }
 
+.message-time {
+    margin-top: 4px;
+    font-size: 10px;
+    opacity: 0.7;
+    text-align: right;
+}
+
 .chat-input{
 
     display:flex;
