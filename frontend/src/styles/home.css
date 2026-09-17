@@ -114,14 +114,15 @@ body{
 
     -webkit-backdrop-filter:blur(15px);
 
-    background:rgba(255,255,255,.16);
+    background:linear-gradient(135deg,rgba(15,23,42,.62),rgba(37,99,235,.28));
 
-    border:2px solid rgba(255,255,255,.28);
+    border:2px solid rgba(255,255,255,.42);
 
     box-shadow:
         0 0 10px cyan,
         0 0 20px blue,
-        0 0 30px purple;
+        0 0 30px purple,
+        inset 0 1px 0 rgba(255,255,255,.3);
 
     position:absolute;
 

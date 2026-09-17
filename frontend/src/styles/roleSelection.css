@@ -15,10 +15,24 @@
   justify-content:center;
 
   align-items:center;
+
+  padding:110px 20px 140px;
+
+  position:relative;
   
 }
 
+.role-page::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.18);
+}
+
 .role-card{
+
+  position:relative;
+  z-index:1;
 
   width:700px;
 
@@ -26,17 +40,18 @@
 
   border-radius:25px;
 
-  background:rgba(255,255,255,0.08);
+  background:linear-gradient(135deg,rgba(15,23,42,.68),rgba(30,64,175,.38));
 
   backdrop-filter:blur(15px);
 
   -webkit-backdrop-filter:blur(15px);
 
-  border:1px solid rgba(255,255,255,0.2);
+  border:1px solid rgba(255,255,255,0.45);
 
   box-shadow:
     0 0 15px cyan,
-    0 0 30px blue;
+    0 0 30px blue,
+    inset 0 1px 0 rgba(255,255,255,.3);
 
   color:white;
 
