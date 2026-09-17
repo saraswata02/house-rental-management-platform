@@ -6,6 +6,7 @@ const {
     sendMessage,
     updateMessage,
     deleteMessage,
+    deleteMessageForEveryone,
     deleteConversation,
 } = require('../controllers/messageController');
 const { protect } = require('../middleware/authMiddleware');
@@ -13,6 +14,7 @@ const { protect } = require('../middleware/authMiddleware');
 router.get('/conversations', protect, getConversations);
 router.post('/send', protect, sendMessage);
 router.put('/:messageId', protect, updateMessage);
+router.delete('/:messageId/everyone', protect, deleteMessageForEveryone);
 router.delete('/:messageId', protect, deleteMessage);
 router.delete('/conversation/:userId', protect, deleteConversation);
 router.get('/:userId', protect, getChatMessages);

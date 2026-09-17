@@ -142,8 +142,10 @@ const deleteMessage = async (req, res) => {
             return res.status(404).json({ message: 'Message not found' });
         }
 
-        if (!isSender(message, req.user._id)) {
-            return res.status(403).json({ message: 'You can only delete your own messages' });
+        const isParticipant = message.sender.toString() === req.user._id.toString()
+            || message.receiver.toString() === req.user._id.toString();
+        if (!isParticipant) {
+            return res.status(403).json({ message: 'You can only delete messages in your conversations' });
         }
 
         await Message.updateOne(
@@ -152,6 +154,27 @@ const deleteMessage = async (req, res) => {
         );
 
         res.json({ message: 'Message hidden from your messages' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete a message for both participants
+// @route   DELETE /api/messages/:messageId/everyone
+// @access  Private
+const deleteMessageForEveryone = async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (!message) return res.status(404).json({ message: 'Message not found' });
+
+        const isParticipant = message.sender.toString() === req.user._id.toString()
+            || message.receiver.toString() === req.user._id.toString();
+        if (!isParticipant) {
+            return res.status(403).json({ message: 'You can only delete messages in your conversations' });
+        }
+
+        await message.deleteOne();
+        res.json({ message: 'Message deleted for everyone' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -188,5 +211,6 @@ module.exports = {
     sendMessage,
     updateMessage,
     deleteMessage,
+    deleteMessageForEveryone,
     deleteConversation,
 };

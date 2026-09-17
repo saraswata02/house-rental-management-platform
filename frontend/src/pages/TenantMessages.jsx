@@ -15,6 +15,7 @@ function TenantMessages() {
     const [sending, setSending] = useState(false);
     const [editingMessageId, setEditingMessageId] = useState(null);
     const [editingText, setEditingText] = useState("");
+    const [openMessageMenuId, setOpenMessageMenuId] = useState(null);
     const chatBodyRef = useRef(null);
 
     // Current logged-in user
@@ -125,11 +126,12 @@ function TenantMessages() {
         }
     };
 
-    const handleDeleteMessage = async (messageId) => {
-        if (!window.confirm("Delete this message?")) return;
+    const handleDeleteMessage = async (messageId, deleteForEveryone = false) => {
+        if (!window.confirm(deleteForEveryone ? "Delete this message for everyone?" : "Delete this message for you?")) return;
         try {
-            await api.delete(`/messages/${messageId}`);
+            await api.delete(deleteForEveryone ? `/messages/${messageId}/everyone` : `/messages/${messageId}`);
             setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+            setOpenMessageMenuId(null);
             await refreshConversations();
         } catch (err) {
             console.error("Failed to delete message:", err);
@@ -231,6 +233,7 @@ function TenantMessages() {
                                         <div
                                             key={msg._id}
                                             className={own ? "sent-message" : "received-message"}
+                                            onClick={() => setOpenMessageMenuId(openMessageMenuId === msg._id ? null : msg._id)}
                                         >
                                             {editingMessageId === msg._id ? (
                                                 <div className="message-edit-box">
@@ -247,19 +250,38 @@ function TenantMessages() {
                                             ) : (
                                                 <>
                                                     <div className="message-content">{msg.text}</div>
-                                                    {own && (
+                                                    {openMessageMenuId === msg._id && (
                                                         <div className="message-control-row">
+                                                            {own && (
+                                                                <button
+                                                                    className="message-action-btn"
+                                                                    onClick={(event) => {
+                                                                        event.stopPropagation();
+                                                                        setEditingMessageId(msg._id);
+                                                                        setEditingText(msg.text);
+                                                                        setOpenMessageMenuId(null);
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                            )}
                                                             <button
-                                                                className="message-action-btn"
-                                                                onClick={() => { setEditingMessageId(msg._id); setEditingText(msg.text); }}
+                                                                className="message-action-btn danger"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    handleDeleteMessage(msg._id);
+                                                                }}
                                                             >
-                                                                Edit
+                                                                Delete for me
                                                             </button>
                                                             <button
                                                                 className="message-action-btn danger"
-                                                                onClick={() => handleDeleteMessage(msg._id)}
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    handleDeleteMessage(msg._id, true);
+                                                                }}
                                                             >
-                                                                Delete
+                                                                Delete for everyone
                                                             </button>
                                                         </div>
                                                     )}
