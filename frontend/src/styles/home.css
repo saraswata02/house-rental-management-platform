@@ -31,7 +31,7 @@ body{
 
     min-height:100vh;
 
-    background:rgba(0,0,0,0);
+    background:rgba(0,0,0,.16);
     
     
 }
@@ -114,9 +114,9 @@ body{
 
     -webkit-backdrop-filter:blur(15px);
 
-    background:rgba(255,255,255,.08);
+    background:rgba(255,255,255,.16);
 
-    border:2px solid transparent;
+    border:2px solid rgba(255,255,255,.28);
 
     box-shadow:
         0 0 10px cyan,
