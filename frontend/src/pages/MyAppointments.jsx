@@ -95,7 +95,6 @@ function MyAppointments() {
       rejected: "Rejected / Cancelled by Owner",
       cancelled: "Cancelled",
       completed: "Completed",
-      reschedule_requested: "Date Unavailable - Action Required",
     };
     return labels[status] || status;
   };
@@ -143,7 +142,9 @@ function MyAppointments() {
             }
 
             const availableDates = visit.property?.availableDates || [];
-            const remainingDates = availableDates.filter((d) => !visit.unavailableDates?.includes(d));
+            const remainingDates = availableDates.filter(
+              (date) => date !== visit.visitDate && !visit.unavailableDates?.includes(date)
+            );
 
             return (
               <div
@@ -168,7 +169,7 @@ function MyAppointments() {
                     <h2>{visit.property?.title}</h2>
                     <p>📍 {visit.property?.location}</p>
                     <p>📅 Scheduled Date: <strong>{visit.visitDate}</strong> at <strong>{visit.timeSlot}</strong></p>
-                    <span
+                    {visit.status !== "reschedule_requested" && <span
                       className={`status ${statusClass(visit.status)}`}
                       style={{
                         background: visit.status === "reschedule_requested" ? "#fef3c7" : undefined,
@@ -176,7 +177,7 @@ function MyAppointments() {
                       }}
                     >
                       {statusLabel(visit.status)}
-                    </span>
+                    </span>}
                   </div>
 
                   <div className="appointment-buttons" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -211,10 +212,10 @@ function MyAppointments() {
                     </div>
 
                     <p style={{ color: "#78350f", fontSize: "13px", margin: "0 0 12px 0" }}>
-                      {visit.ownerNote || "The owner marked this timing as unavailable. Please choose another available date or reject the appointment."}
+                      {visit.ownerNote || "Please choose another date from the owner's posted availability."}
                     </p>
 
-                    {/* Tenant 2 Options: Approve (Select New Date) & Reject */}
+                    {/* Tenant selects a replacement date from the owner's posted availability. */}
                     {!isRescheduleMode ? (
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                         <button
@@ -233,23 +234,7 @@ function MyAppointments() {
                             cursor: "pointer",
                           }}
                         >
-                          ✓ Approve (Choose Another Date)
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleCancel(visit._id)}
-                          style={{
-                            background: "#dc2626",
-                            color: "#fff",
-                            border: "none",
-                            padding: "8px 16px",
-                            borderRadius: "8px",
-                            fontWeight: "700",
-                            cursor: "pointer",
-                          }}
-                        >
-                          ✕ Reject Appointment
+                          Choose Another Date
                         </button>
                       </div>
                     ) : (
@@ -283,15 +268,9 @@ function MyAppointments() {
                             })}
                           </div>
                         ) : (
-                          <div style={{ marginBottom: "14px" }}>
-                            <input
-                              type="date"
-                              value={chosenDate}
-                              onChange={(e) => setChosenDate(e.target.value)}
-                              min={new Date().toISOString().split("T")[0]}
-                              style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #cbd5e1" }}
-                            />
-                          </div>
+                          <p style={{ color: "#92400e", marginBottom: "14px" }}>
+                            The owner has not posted another available date yet.
+                          </p>
                         )}
 
                         <div style={{ display: "flex", gap: "8px" }}>
@@ -327,22 +306,6 @@ function MyAppointments() {
                             Back
                           </button>
 
-                          <button
-                            type="button"
-                            onClick={() => handleCancel(visit._id)}
-                            style={{
-                              background: "#fee2e2",
-                              border: "1px solid #fca5a5",
-                              color: "#991b1b",
-                              padding: "8px 14px",
-                              borderRadius: "8px",
-                              fontWeight: "600",
-                              cursor: "pointer",
-                              marginLeft: "auto",
-                            }}
-                          >
-                            Reject & Cancel
-                          </button>
                         </div>
                       </div>
                     )}
