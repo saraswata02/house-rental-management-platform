@@ -8,6 +8,7 @@ import api from "../utils/api";
 function TenantNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,6 +42,17 @@ function TenantNotifications() {
     )));
   };
 
+  const deleteNotification = async (notificationId) => {
+    try {
+      await api.delete(`/notifications/${notificationId}`);
+      setNotifications((current) => current.filter((notification) => notification._id !== notificationId));
+      setOpenMenuId(null);
+    } catch (err) {
+      console.error("Error deleting notification:", err);
+      alert("Failed to delete notification. Please try again.");
+    }
+  };
+
   return (
     <div className="tenant-notifications-page">
       <Navbar />
@@ -72,8 +84,28 @@ function TenantNotifications() {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  position: "relative",
                 }}
               >
+                <div style={{ position: "absolute", top: "10px", right: "10px", zIndex: 1 }}>
+                  <button
+                    type="button"
+                    aria-label={`More options for ${item.title}`}
+                    onClick={() => setOpenMenuId(openMenuId === item._id ? null : item._id)}
+                    style={{ background: "transparent", border: "none", fontSize: "22px", cursor: "pointer", lineHeight: 1 }}
+                  >
+                    ⋯
+                  </button>
+                  {openMenuId === item._id && (
+                    <button
+                      type="button"
+                      onClick={() => deleteNotification(item._id)}
+                      style={{ display: "block", marginTop: "4px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                   <div className="notification-icon">{item.icon}</div>
                   <div className="notification-content">

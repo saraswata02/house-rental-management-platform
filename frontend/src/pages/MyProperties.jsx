@@ -16,6 +16,7 @@ function MyProperties() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -61,7 +62,48 @@ function MyProperties() {
             properties.map((p) => {
               const cardImg = getImageSrc(p.images?.[0]);
               return (
-              <div className="owner-property-card" key={p._id}>
+              <div className="owner-property-card" key={p._id} style={{ position: "relative" }}>
+                <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 1 }}>
+                  <button
+                    type="button"
+                    aria-label={`More options for ${p.title}`}
+                    onClick={() => setOpenMenuId(openMenuId === p._id ? null : p._id)}
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "50%",
+                      width: "34px",
+                      height: "34px",
+                      fontSize: "20px",
+                      lineHeight: "20px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ⋯
+                  </button>
+                  {openMenuId === p._id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpenMenuId(null);
+                        handleDelete(p._id);
+                      }}
+                      style={{
+                        display: "block",
+                        marginTop: "6px",
+                        background: "#fee2e2",
+                        border: "1px solid #fca5a5",
+                        color: "#991b1b",
+                        padding: "7px 14px",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
                 {cardImg ? (
                   <img
                     src={cardImg}
@@ -99,7 +141,6 @@ function MyProperties() {
                 <div className="property-actions">
                   <button className="view-btn" onClick={() => navigate(`/property/${p._id}`)}>View</button>
                   <button className="edit-btn" onClick={() => navigate(`/edit-property/${p._id}`)}>Edit</button>
-                  <button className="delete-btn" onClick={() => handleDelete(p._id)}>Delete</button>
                 </div>
               </div>
             );
