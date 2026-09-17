@@ -95,6 +95,7 @@ function MyAppointments() {
       rejected: "Rejected / Cancelled by Owner",
       cancelled: "Cancelled",
       completed: "Completed",
+      reschedule_requested: "Date Unavailable - Action Required",
     };
     return labels[status] || status;
   };
@@ -169,7 +170,7 @@ function MyAppointments() {
                     <h2>{visit.property?.title}</h2>
                     <p>📍 {visit.property?.location}</p>
                     <p>📅 Scheduled Date: <strong>{visit.visitDate}</strong> at <strong>{visit.timeSlot}</strong></p>
-                    {visit.status !== "reschedule_requested" && <span
+                    <span
                       className={`status ${statusClass(visit.status)}`}
                       style={{
                         background: visit.status === "reschedule_requested" ? "#fef3c7" : undefined,
@@ -177,7 +178,7 @@ function MyAppointments() {
                       }}
                     >
                       {statusLabel(visit.status)}
-                    </span>}
+                    </span>
                   </div>
 
                   <div className="appointment-buttons" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -215,7 +216,7 @@ function MyAppointments() {
                       {visit.ownerNote || "Please choose another date from the owner's posted availability."}
                     </p>
 
-                    {/* Tenant selects a replacement date from the owner's posted availability. */}
+                    {/* Tenant can choose another date or reject the appointment. */}
                     {!isRescheduleMode ? (
                       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                         <button
@@ -234,7 +235,23 @@ function MyAppointments() {
                             cursor: "pointer",
                           }}
                         >
-                          Choose Another Date
+                          ✓ Approve (Choose Another Date)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleCancel(visit._id)}
+                          style={{
+                            background: "#dc2626",
+                            color: "#fff",
+                            border: "none",
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            fontWeight: "700",
+                            cursor: "pointer",
+                          }}
+                        >
+                          ✕ Reject Appointment
                         </button>
                       </div>
                     ) : (
@@ -304,6 +321,23 @@ function MyAppointments() {
                             }}
                           >
                             Back
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleCancel(visit._id)}
+                            style={{
+                              background: "#fee2e2",
+                              border: "1px solid #fca5a5",
+                              color: "#991b1b",
+                              padding: "8px 14px",
+                              borderRadius: "8px",
+                              fontWeight: "600",
+                              cursor: "pointer",
+                              marginLeft: "auto",
+                            }}
+                          >
+                            Reject & Cancel
                           </button>
 
                         </div>
