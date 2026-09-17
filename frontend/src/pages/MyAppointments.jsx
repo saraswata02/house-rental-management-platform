@@ -17,11 +17,9 @@ function MyAppointments() {
   const [loading, setLoading] = useState(true);
   const [activeRescheduleId, setActiveRescheduleId] = useState(null);
   const [chosenDate, setChosenDate] = useState("");
-  const [chosenTime, setChosenTime] = useState("11:00 AM");
   const [submittingDate, setSubmittingDate] = useState(false);
   const navigate = useNavigate();
 
-  const TIME_SLOTS = ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM"];
 
   const fetchVisits = async () => {
     try {
@@ -65,21 +63,15 @@ function MyAppointments() {
       alert("Please select one of the available dates.");
       return;
     }
-    if (!chosenTime) {
-      alert("Please select a visit time.");
-      return;
-    }
     try {
       setSubmittingDate(true);
       const { data } = await api.patch(`/visits/${visitId}/select-date`, {
         visitDate: chosenDate,
-        timeSlot: chosenTime,
       });
       setVisits(visits.map((v) => v._id === visitId ? data : v));
       setActiveRescheduleId(null);
       setChosenDate("");
-      setChosenTime("11:00 AM");
-      alert(`Date and time successfully updated to ${chosenDate} at ${chosenTime}! The owner has been notified.`);
+      alert(`Date successfully updated to ${chosenDate}! The owner has been notified.`);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update visit date.");
     } finally {
@@ -230,7 +222,6 @@ function MyAppointments() {
                           onClick={() => {
                             setActiveRescheduleId(visit._id);
                             setChosenDate(remainingDates[0] || "");
-                            setChosenTime(visit.timeSlot || "11:00 AM");
                           }}
                           style={{
                             background: "#16a34a",
@@ -303,26 +294,11 @@ function MyAppointments() {
                           </div>
                         )}
 
-                        <div style={{ marginBottom: "14px" }}>
-                          <p style={{ fontWeight: "700", color: "#1e293b", margin: "0 0 8px 0", fontSize: "14px" }}>
-                            Select a time slot
-                          </p>
-                          <select
-                            value={chosenTime}
-                            onChange={(e) => setChosenTime(e.target.value)}
-                            style={{ padding: "8px 10px", borderRadius: "8px", border: "1px solid #cbd5e1", minWidth: "160px" }}
-                          >
-                            {TIME_SLOTS.map((slot) => (
-                              <option key={slot} value={slot}>{slot}</option>
-                            ))}
-                          </select>
-                        </div>
-
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button
                             type="button"
                             onClick={() => handleSelectAlternateDate(visit._id)}
-                            disabled={submittingDate || !chosenDate || !chosenTime}
+                            disabled={submittingDate || !chosenDate}
                             style={{
                               background: "#2563eb",
                               color: "#fff",
@@ -333,7 +309,7 @@ function MyAppointments() {
                               cursor: "pointer",
                             }}
                           >
-                            {submittingDate ? "Updating..." : `Confirm ${chosenDate ? chosenDate : "Date"} at ${chosenTime}`}
+                            {submittingDate ? "Updating..." : `Confirm ${chosenDate ? chosenDate : "Date"}`}
                           </button>
 
                           <button

@@ -142,7 +142,7 @@ const updateVisitStatus = async (req, res) => {
 // @access  Private (Landlord)
 const requestReschedule = async (req, res) => {
     try {
-        const { note, timeSlot } = req.body;
+        const { note } = req.body;
         const visit = await Visit.findById(req.params.id)
             .populate({
                 path: 'property',
@@ -152,7 +152,7 @@ const requestReschedule = async (req, res) => {
         if (!visit) return res.status(404).json({ message: 'Visit not found' });
 
         // Security: Ensure the landlord owns the property for this visit
-        if (visit.property.landlord.toString() !== req.user._id.toString()) {
+        if (visit.property.landlord._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Not authorized to update this visit' });
         }
 
@@ -161,12 +161,8 @@ const requestReschedule = async (req, res) => {
         if (!visit.unavailableDates.includes(unavailableDate)) {
             visit.unavailableDates.push(unavailableDate);
         }
-        if (timeSlot) {
-            visit.timeSlot = timeSlot;
-        }
-
         visit.status = 'reschedule_requested';
-        visit.ownerNote = note || `Owner is not available on ${unavailableDate} at ${visit.timeSlot || 'the selected time'}. Please choose another date and time from the available options.`;
+        visit.ownerNote = note || `Owner is not available on ${unavailableDate}. Please choose another date.`;
         await visit.save();
 
         // Notify tenant
@@ -174,7 +170,7 @@ const requestReschedule = async (req, res) => {
             user: visit.tenant._id,
             icon: '⚠️',
             title: 'Date Not Available - Please Choose Another',
-            message: `${visit.property.landlord.firstName} ${visit.property.landlord.lastName} is not available on ${unavailableDate} at ${visit.timeSlot || 'the selected time'} for "${visit.property.title}". Please choose another available date and time.`,
+            message: `${visit.property.landlord.firstName} ${visit.property.landlord.lastName} is not available on ${unavailableDate} for "${visit.property.title}". Please choose another date.`,
         });
 
         res.json(visit);
@@ -188,12 +184,9 @@ const requestReschedule = async (req, res) => {
 // @access  Private (Tenant)
 const selectAlternateDate = async (req, res) => {
     try {
-        const { visitDate, timeSlot } = req.body;
+        const { visitDate } = req.body;
         if (!visitDate) {
             return res.status(400).json({ message: 'Please select a visit date.' });
-        }
-        if (!timeSlot) {
-            return res.status(400).json({ message: 'Please select a visit time.' });
         }
 
         const visit = await Visit.findById(req.params.id).populate({
@@ -207,7 +200,6 @@ const selectAlternateDate = async (req, res) => {
         }
 
         visit.visitDate = visitDate;
-        if (timeSlot) visit.timeSlot = timeSlot;
         visit.status = 'pending';
         visit.ownerNote = '';
         await visit.save();
@@ -218,7 +210,7 @@ const selectAlternateDate = async (req, res) => {
                 user: visit.property.landlord._id,
                 icon: '📅',
                 title: 'Alternate Date Selected',
-                message: `A tenant selected ${visitDate} at ${visit.timeSlot} for "${visit.property.title}". Please confirm or reject.`,
+                message: `A tenant selected ${visitDate} for "${visit.property.title}". Please confirm or reject.`,
             });
         }
 
