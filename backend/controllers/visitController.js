@@ -295,6 +295,25 @@ const cancelVisit = async (req, res) => {
     }
 };
 
+// @desc    Delete a visit from the tenant's appointments
+// @route   DELETE /api/visits/:id
+// @access  Private (Tenant)
+const deleteVisit = async (req, res) => {
+    try {
+        const visit = await Visit.findById(req.params.id);
+        if (!visit) return res.status(404).json({ message: 'Visit not found' });
+
+        if (visit.tenant.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'Not authorized' });
+        }
+
+        await Visit.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Visit deleted' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 module.exports = {
     bookVisit,
     getMyVisits,
@@ -304,5 +323,6 @@ module.exports = {
     requestReschedule,
     selectAlternateDate,
     rescheduleVisit,
-    cancelVisit
+    cancelVisit,
+    deleteVisit
 };

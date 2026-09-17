@@ -18,6 +18,7 @@ function MyAppointments() {
   const [activeRescheduleId, setActiveRescheduleId] = useState(null);
   const [chosenDate, setChosenDate] = useState("");
   const [submittingDate, setSubmittingDate] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
 
 
@@ -55,6 +56,18 @@ function MyAppointments() {
       setVisits(visits.filter((v) => v._id !== visitId));
     } catch {
       alert("Failed to dismiss. Please try again.");
+    }
+  };
+
+  const handleDelete = async (visitId) => {
+    if (!window.confirm("Delete this appointment from your appointments?")) return;
+    try {
+      await api.delete(`/visits/${visitId}`);
+      setVisits((current) => current.filter((visit) => visit._id !== visitId));
+      setOpenMenuId(null);
+    } catch (err) {
+      console.error("Error deleting appointment:", err);
+      alert("Failed to delete appointment. Please try again.");
     }
   };
 
@@ -128,10 +141,30 @@ function MyAppointments() {
                     display: "flex",
                     flexDirection: "column",
                     gap: "10px",
-                    background: "#fff5f5"
-                  }}
-                >
-                  <p style={{ margin: 0, color: "#991b1b", fontWeight: "600", fontSize: "15px" }}>
+                    background: "#fff5f5",
+                    position: "relative",
+                    }}
+                  >
+                    <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 1 }}>
+                      <button
+                        type="button"
+                        aria-label="More appointment options"
+                        onClick={() => setOpenMenuId(openMenuId === visit._id ? null : visit._id)}
+                        style={{ background: "transparent", border: "none", fontSize: "22px", cursor: "pointer", lineHeight: 1 }}
+                      >
+                        ⋯
+                      </button>
+                      {openMenuId === visit._id && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(visit._id)}
+                          style={{ display: "block", marginTop: "4px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" }}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ margin: 0, color: "#991b1b", fontWeight: "600", fontSize: "15px" }}>
                     ⚠️ Due to some problems owners has removed its property from post go for some more properties
                   </p>
                   <button className="cancel-btn" onClick={() => handleDismissDeletedProperty(visit._id)} style={{ alignSelf: "flex-start" }}>
@@ -155,8 +188,28 @@ function MyAppointments() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "14px",
+                  position: "relative",
                 }}
               >
+                <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 1 }}>
+                  <button
+                    type="button"
+                    aria-label={`More options for ${visit.property?.title || "appointment"}`}
+                    onClick={() => setOpenMenuId(openMenuId === visit._id ? null : visit._id)}
+                    style={{ background: "transparent", border: "none", fontSize: "22px", cursor: "pointer", lineHeight: 1 }}
+                  >
+                    ⋯
+                  </button>
+                  {openMenuId === visit._id && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(visit._id)}
+                      style={{ display: "block", marginTop: "4px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
                 <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
                   <div className="appointment-image">
                     <img
