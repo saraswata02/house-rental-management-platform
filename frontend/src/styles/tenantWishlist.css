@@ -8,7 +8,7 @@
 .wishlist-container{
     width:90%;
     max-width:1300px;
-    margin:40px auto;
+    margin:115px auto 40px;
 }
 
 .wishlist-container h1{
@@ -124,6 +124,7 @@
 
     .wishlist-container{
         width:95%;
+        margin-top:105px;
     }
 
     .wishlist-container h1{

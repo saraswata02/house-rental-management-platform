@@ -104,13 +104,6 @@ function TenantWishlist() {
                                         </button>
 
                                         <button
-                                            className="visit-btn"
-                                            onClick={() => navigate(`/property/${property._id}`)}
-                                        >
-                                            Schedule Visit
-                                        </button>
-
-                                        <button
                                             className="remove-btn"
                                             onClick={() => handleRemove(property._id)}
                                         >
