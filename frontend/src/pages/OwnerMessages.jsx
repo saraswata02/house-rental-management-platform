@@ -246,15 +246,17 @@ function OwnerMessages() {
                                                             >
                                                                 Delete for me
                                                             </button>
-                                                            <button
-                                                                className="message-action-btn danger"
-                                                                onClick={(event) => {
-                                                                    event.stopPropagation();
-                                                                    handleDeleteMessage(msg._id, true);
-                                                                }}
-                                                            >
-                                                                Delete for everyone
-                                                            </button>
+                                                            {own && (
+                                                                <button
+                                                                    className="message-action-btn danger"
+                                                                    onClick={(event) => {
+                                                                        event.stopPropagation();
+                                                                        handleDeleteMessage(msg._id, true);
+                                                                    }}
+                                                                >
+                                                                    Delete for everyone
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </>

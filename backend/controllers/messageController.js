@@ -142,10 +142,8 @@ const deleteMessage = async (req, res) => {
             return res.status(404).json({ message: 'Message not found' });
         }
 
-        const isParticipant = message.sender.toString() === req.user._id.toString()
-            || message.receiver.toString() === req.user._id.toString();
-        if (!isParticipant) {
-            return res.status(403).json({ message: 'You can only delete messages in your conversations' });
+        if (message.sender.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You can only delete your own message for everyone' });
         }
 
         await Message.updateOne(
