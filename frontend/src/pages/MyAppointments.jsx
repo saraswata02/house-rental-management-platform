@@ -95,7 +95,6 @@ function MyAppointments() {
       rejected: "Rejected / Cancelled by Owner",
       cancelled: "Cancelled",
       completed: "Completed",
-      reschedule_requested: "Date Unavailable - Action Required",
     };
     return labels[status] || status;
   };
@@ -170,15 +169,11 @@ function MyAppointments() {
                     <h2>{visit.property?.title}</h2>
                     <p>📍 {visit.property?.location}</p>
                     <p>📅 Scheduled Date: <strong>{visit.visitDate}</strong> at <strong>{visit.timeSlot}</strong></p>
-                    <span
-                      className={`status ${statusClass(visit.status)}`}
-                      style={{
-                        background: visit.status === "reschedule_requested" ? "#fef3c7" : undefined,
-                        color: visit.status === "reschedule_requested" ? "#92400e" : undefined,
-                      }}
-                    >
-                      {statusLabel(visit.status)}
-                    </span>
+                    {visit.status !== "reschedule_requested" && (
+                      <span className={`status ${statusClass(visit.status)}`}>
+                        {statusLabel(visit.status)}
+                      </span>
+                    )}
                   </div>
 
                   <div className="appointment-buttons" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -321,23 +316,6 @@ function MyAppointments() {
                             }}
                           >
                             Back
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleCancel(visit._id)}
-                            style={{
-                              background: "#fee2e2",
-                              border: "1px solid #fca5a5",
-                              color: "#991b1b",
-                              padding: "8px 14px",
-                              borderRadius: "8px",
-                              fontWeight: "600",
-                              cursor: "pointer",
-                              marginLeft: "auto",
-                            }}
-                          >
-                            Reject & Cancel
                           </button>
 
                         </div>
