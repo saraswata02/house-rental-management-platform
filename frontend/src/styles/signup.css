@@ -20,6 +20,7 @@
   position:absolute;
   inset:0;
   background:rgba(0,0,0,0.16);
+  pointer-events:none;
 }
 
 .signup-card{
