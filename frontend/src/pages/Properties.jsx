@@ -77,11 +77,6 @@ function Properties() {
     <div className="properties-page">
       <Navbar />
 
-      <section className="properties-header">
-        <h1>Find Your Perfect Rental</h1>
-        <p>Browse thousands of verified rental properties.</p>
-      </section>
-
       <div className="properties-layout">
         <PropertyFilter onFilter={handleFilter} />
         <div className="properties-content">
