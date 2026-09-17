@@ -44,7 +44,10 @@ const bookVisit = async (req, res) => {
 // @access  Private (Tenant)
 const getMyVisits = async (req, res) => {
     try {
-        const visits = await Visit.find({ tenant: req.user._id })
+        const visits = await Visit.find({
+            tenant: req.user._id,
+            hiddenFromTenant: { $ne: true },
+        })
             .populate('property', 'title location images rent availableDates landlord bhk')
             .sort({ createdAt: -1 });
         res.json(visits);
@@ -307,8 +310,9 @@ const deleteVisit = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized' });
         }
 
-        await Visit.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Visit deleted' });
+        visit.hiddenFromTenant = true;
+        await visit.save();
+        res.json({ message: 'Visit removed from tenant dashboard' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

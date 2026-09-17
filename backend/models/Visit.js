@@ -14,6 +14,7 @@ const visitSchema = new mongoose.Schema({
     },
     ownerNote:        { type: String, default: '' },
     unavailableDates: [{ type: String }],
+    hiddenFromTenant: { type: Boolean, default: false },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Visit', visitSchema);

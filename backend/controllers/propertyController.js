@@ -74,7 +74,10 @@ const getPropertyById = async (req, res) => {
 // @access  Private (Landlord)
 const getMyProperties = async (req, res) => {
     try {
-        const properties = await Property.find({ landlord: req.user._id }).sort({ createdAt: -1 });
+        const properties = await Property.find({
+            landlord: req.user._id,
+            hiddenFromOwner: { $ne: true },
+        }).sort({ createdAt: -1 });
         res.json(properties);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -235,8 +238,9 @@ const deleteProperty = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to delete this property' });
         }
 
-        await property.deleteOne();
-        res.json({ message: 'Property deleted successfully' });
+        property.hiddenFromOwner = true;
+        await property.save();
+        res.json({ message: 'Property removed from owner dashboard' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

@@ -5,6 +5,7 @@ const messageSchema = new mongoose.Schema({
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     property: { type: mongoose.Schema.Types.ObjectId, ref: 'Property' },
     text:     { type: String, required: true, trim: true },
+    hiddenFor: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Message', messageSchema);

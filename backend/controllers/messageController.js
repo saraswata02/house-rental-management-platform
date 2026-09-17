@@ -16,7 +16,10 @@ const getConversations = async (req, res) => {
 
         // Find all messages where user is sender or receiver
         const messages = await Message.find({
-            $or: [{ sender: userId }, { receiver: userId }]
+            $and: [
+                { $or: [{ sender: userId }, { receiver: userId }] },
+                { hiddenFor: { $ne: userId } },
+            ],
         })
         .populate('sender', 'firstName lastName profilePicture role')
         .populate('receiver', 'firstName lastName profilePicture role')
@@ -58,7 +61,8 @@ const getChatMessages = async (req, res) => {
             $or: [
                 { sender: userId, receiver: partnerId },
                 { sender: partnerId, receiver: userId },
-            ]
+            ],
+            hiddenFor: { $ne: userId },
         })
         .sort({ createdAt: 1 });
 
@@ -142,9 +146,12 @@ const deleteMessage = async (req, res) => {
             return res.status(403).json({ message: 'You can only delete your own messages' });
         }
 
-        await message.deleteOne();
+        await Message.updateOne(
+            { _id: message._id },
+            { $addToSet: { hiddenFor: req.user._id } }
+        );
 
-        res.json({ message: 'Message deleted successfully' });
+        res.json({ message: 'Message hidden from your messages' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -158,14 +165,18 @@ const deleteConversation = async (req, res) => {
         const partnerId = req.params.userId;
         const userId = req.user._id;
 
-        await Message.deleteMany({
-            $or: [
-                { sender: userId, receiver: partnerId },
-                { sender: partnerId, receiver: userId },
-            ],
-        });
+        await Message.updateMany(
+            {
+                $or: [
+                    { sender: userId, receiver: partnerId },
+                    { sender: partnerId, receiver: userId },
+                ],
+                hiddenFor: { $ne: userId },
+            },
+            { $addToSet: { hiddenFor: userId } }
+        );
 
-        res.json({ message: 'Conversation deleted successfully' });
+        res.json({ message: 'Conversation hidden from your messages' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
