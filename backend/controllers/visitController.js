@@ -48,7 +48,7 @@ const getMyVisits = async (req, res) => {
             tenant: req.user._id,
             hiddenFromTenant: { $ne: true },
         })
-            .populate('property', 'title location images rent availableDates landlord bhk')
+            .populate('property', 'title location images rent availableDates landlord bhk hiddenFromOwner')
             .sort({ createdAt: -1 });
         res.json(visits);
     } catch (error) {
@@ -61,12 +61,15 @@ const getMyVisits = async (req, res) => {
 // @access  Private (Landlord)
 const getVisitsForOwner = async (req, res) => {
     try {
-        const myProperties = await Property.find({ landlord: req.user._id }).select('_id');
+        const myProperties = await Property.find({
+            landlord: req.user._id,
+            hiddenFromOwner: { $ne: true },
+        }).select('_id');
         const propertyIds = myProperties.map(p => p._id);
 
         const visits = await Visit.find({ property: { $in: propertyIds } })
             .populate('tenant', 'firstName lastName email phone profilePicture')
-            .populate('property', 'title location rent bhk availableDates images')
+            .populate('property', 'title location rent bhk availableDates images hiddenFromOwner')
             .sort({ createdAt: -1 });
 
         res.json(visits);

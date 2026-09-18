@@ -1,5 +1,6 @@
 const Property = require('../models/Property');
 const Notification = require('../models/Notification');
+const Visit = require('../models/Visit');
 const path = require('path');
 
 // @desc    Get all properties (with optional filters)
@@ -238,9 +239,18 @@ const deleteProperty = async (req, res) => {
             return res.status(403).json({ message: 'Not authorized to delete this property' });
         }
 
+        const visits = await Visit.find({ property: property._id }).select('tenant');
         property.hiddenFromOwner = true;
         await property.save();
-        res.json({ message: 'Property removed from owner dashboard' });
+
+        await Promise.all(visits.map((visit) => Notification.create({
+            user: visit.tenant,
+            icon: '⚠️',
+            title: 'Property Removed by Owner',
+            message: `Due to some problems, the owner has removed "${property.title}" from their property post. Please go for more properties.`,
+        })));
+
+        res.json({ message: 'You removed this property from your dashboard' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

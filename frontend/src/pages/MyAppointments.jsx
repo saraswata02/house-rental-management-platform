@@ -131,7 +131,7 @@ function MyAppointments() {
             const isRescheduleMode = activeRescheduleId === visit._id;
             
             // Check if the property was deleted by the owner
-            if (!visit.property) {
+            if (!visit.property || visit.property.hiddenFromOwner) {
               // If already dismissed (cancelled), don't show it at all
               if (visit.status === "cancelled") return null;
 
@@ -168,7 +168,7 @@ function MyAppointments() {
                       )}
                     </div>
                     <p style={{ margin: 0, color: "#991b1b", fontWeight: "600", fontSize: "15px" }}>
-                    ⚠️ Due to some problems owners has removed its property from post go for some more properties
+                    ⚠️ Due to some problems, the owner has removed this property post. Please go for more properties.
                   </p>
                   <button className="cancel-btn" onClick={() => handleDismissDeletedProperty(visit._id)} style={{ alignSelf: "flex-start" }}>
                     Dismiss

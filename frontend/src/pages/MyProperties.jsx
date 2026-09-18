@@ -37,6 +37,7 @@ function MyProperties() {
     try {
       await api.delete(`/properties/${id}`);
       setProperties(properties.filter((p) => p._id !== id));
+      alert("You removed the property from your dashboard.");
     } catch {
       alert("Delete failed.");
     }
