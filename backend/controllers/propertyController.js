@@ -9,7 +9,7 @@ const path = require('path');
 const getAllProperties = async (req, res) => {
     try {
         const { location, bhk, minRent, maxRent, sort, availabilityStatus, amenity, petFriendly } = req.query;
-        const filter = {};
+        const filter = { hiddenFromOwner: { $ne: true } };
         // If a specific availability filter is sent, use it; otherwise default to 'available'
         if (availabilityStatus) {
             filter.availabilityStatus = availabilityStatus;
@@ -58,7 +58,9 @@ const getPropertyById = async (req, res) => {
         const property = await Property.findById(req.params.id)
             .populate('landlord', 'firstName lastName email phone profilePicture');
 
-        if (!property) return res.status(404).json({ message: 'Property not found' });
+        if (!property || property.hiddenFromOwner) {
+            return res.status(404).json({ message: 'Property not found' });
+        }
 
         // Increment view count
         property.views += 1;

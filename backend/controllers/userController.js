@@ -5,7 +5,10 @@ const User = require('../models/User');
 // @access  Private
 const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).populate('wishlist');
+        const user = await User.findById(req.user._id).populate({
+            path: 'wishlist',
+            match: { hiddenFromOwner: { $ne: true } },
+        });
         await user.save();
         user.password = undefined;
         res.json(user);
@@ -69,7 +72,10 @@ const addToWishlist = async (req, res) => {
 
         // Validate the property actually exists
         const Property = require('../models/Property');
-        const propertyExists = await Property.exists({ _id: propertyId });
+        const propertyExists = await Property.exists({
+            _id: propertyId,
+            hiddenFromOwner: { $ne: true },
+        });
         if (!propertyExists) {
             return res.status(404).json({ message: 'Property not found' });
         }
