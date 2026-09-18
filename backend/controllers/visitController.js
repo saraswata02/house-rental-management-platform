@@ -187,9 +187,12 @@ const requestReschedule = async (req, res) => {
 // @access  Private (Tenant)
 const selectAlternateDate = async (req, res) => {
     try {
-        const { visitDate } = req.body;
+        const { visitDate, timeSlot } = req.body;
         if (!visitDate) {
             return res.status(400).json({ message: 'Please select a visit date.' });
+        }
+        if (!timeSlot || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(timeSlot)) {
+            return res.status(400).json({ message: 'Please select a valid visit time.' });
         }
 
         const visit = await Visit.findById(req.params.id).populate({
@@ -203,6 +206,10 @@ const selectAlternateDate = async (req, res) => {
         }
 
         visit.visitDate = visitDate;
+        const [hours, minutes] = timeSlot.split(':').map(Number);
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        visit.timeSlot = `${String(displayHours).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
         visit.status = 'pending';
         visit.ownerNote = '';
         await visit.save();
@@ -213,7 +220,7 @@ const selectAlternateDate = async (req, res) => {
                 user: visit.property.landlord._id,
                 icon: '📅',
                 title: 'Alternate Date Selected',
-                message: `A tenant selected ${visitDate} for "${visit.property.title}". Please confirm or reject.`,
+                message: `A tenant selected ${visitDate} at ${visit.timeSlot} for "${visit.property.title}". Please confirm or reject.`,
             });
         }
 

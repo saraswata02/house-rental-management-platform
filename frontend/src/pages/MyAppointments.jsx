@@ -17,6 +17,7 @@ function MyAppointments() {
   const [loading, setLoading] = useState(true);
   const [activeRescheduleId, setActiveRescheduleId] = useState(null);
   const [chosenDate, setChosenDate] = useState("");
+  const [chosenTime, setChosenTime] = useState("");
   const [submittingDate, setSubmittingDate] = useState(false);
   const [openMenuId, setOpenMenuId] = useState(null);
   const navigate = useNavigate();
@@ -72,18 +73,20 @@ function MyAppointments() {
   };
 
   const handleSelectAlternateDate = async (visitId) => {
-    if (!chosenDate) {
-      alert("Please select one of the available dates.");
+    if (!chosenDate || !chosenTime) {
+      alert("Please select an available date and time.");
       return;
     }
     try {
       setSubmittingDate(true);
       const { data } = await api.patch(`/visits/${visitId}/select-date`, {
         visitDate: chosenDate,
+        timeSlot: chosenTime,
       });
       setVisits(visits.map((v) => v._id === visitId ? data : v));
       setActiveRescheduleId(null);
       setChosenDate("");
+      setChosenTime("");
       alert(`Date successfully updated to ${chosenDate}! The owner has been notified.`);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update visit date.");
@@ -272,6 +275,7 @@ function MyAppointments() {
                           onClick={() => {
                             setActiveRescheduleId(visit._id);
                             setChosenDate(remainingDates[0] || "");
+                            setChosenTime("");
                           }}
                           style={{
                             background: "#16a34a",
@@ -338,11 +342,27 @@ function MyAppointments() {
                           </p>
                         )}
 
+                        <label style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "14px", color: "#1e293b", fontWeight: "700", fontSize: "14px" }}>
+                          Select a time for the chosen date:
+                          <input
+                            type="time"
+                            value={chosenTime}
+                            onChange={(event) => setChosenTime(event.target.value)}
+                            style={{
+                              width: "180px",
+                              padding: "8px 10px",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: "8px",
+                              fontWeight: "500",
+                            }}
+                          />
+                        </label>
+
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button
                             type="button"
                             onClick={() => handleSelectAlternateDate(visit._id)}
-                            disabled={submittingDate || !chosenDate}
+                            disabled={submittingDate || !chosenDate || !chosenTime}
                             style={{
                               background: "#2563eb",
                               color: "#fff",
