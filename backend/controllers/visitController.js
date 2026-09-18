@@ -297,8 +297,8 @@ const cancelVisit = async (req, res) => {
             await Notification.create({
                 user: visit.property.landlord._id,
                 icon: '❌',
-                title: 'Appointment Cancelled/Declined',
-                message: `A tenant has cancelled/declined their appointment for "${visit.property.title}".`,
+                title: 'Tenant Cancelled Appointment',
+                message: `The tenant cancelled their appointment for "${visit.property.title}".`,
             });
         }
 

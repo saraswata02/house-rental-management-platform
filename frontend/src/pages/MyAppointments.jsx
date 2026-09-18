@@ -52,9 +52,8 @@ function MyAppointments() {
 
   const handleDismissDeletedProperty = async (visitId) => {
     try {
-      await api.patch(`/visits/${visitId}/cancel`);
-      // Immediately hide it from the UI by filtering it out
-      setVisits(visits.filter((v) => v._id !== visitId));
+      await api.delete(`/visits/${visitId}`);
+      setVisits((current) => current.filter((visit) => visit._id !== visitId));
     } catch {
       alert("Failed to dismiss. Please try again.");
     }
