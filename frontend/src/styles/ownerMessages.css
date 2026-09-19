@@ -288,7 +288,15 @@
 }
 
 .message-action-btn.danger {
-    background: rgba(220, 38, 38, 0.2);
+    background: #2563eb;
+    color: white;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.message-action-btn.danger:hover {
+    background: #1d4ed8;
 }
 
 .message-edit-box {
