@@ -50,15 +50,6 @@ function MyAppointments() {
     }
   };
 
-  const handleDismissDeletedProperty = async (visitId) => {
-    try {
-      await api.delete(`/visits/${visitId}`);
-      setVisits((current) => current.filter((visit) => visit._id !== visitId));
-    } catch {
-      alert("Failed to dismiss. Please try again.");
-    }
-  };
-
   const handleDelete = async (visitId) => {
     if (!window.confirm("Delete this appointment from your appointments?")) return;
     try {
@@ -167,11 +158,8 @@ function MyAppointments() {
                       )}
                     </div>
                     <p style={{ margin: 0, color: "#991b1b", fontWeight: "600", fontSize: "15px" }}>
-                    ⚠️ Due to some problems, the owner has removed this property post. Please go for more properties.
-                  </p>
-                  <button className="cancel-btn" onClick={() => handleDismissDeletedProperty(visit._id)} style={{ alignSelf: "flex-start" }}>
-                    Dismiss
-                  </button>
+                      ⚠️ Due to some problems, the owner has removed this property post. Please go for more properties.
+                    </p>
                 </div>
               );
             }
