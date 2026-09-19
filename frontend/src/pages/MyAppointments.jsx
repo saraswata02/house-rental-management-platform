@@ -138,7 +138,7 @@ function MyAppointments() {
                     position: "relative",
                     }}
                   >
-                    <div style={{ position: "absolute", top: "12px", right: "-92px", zIndex: 1 }}>
+                    <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 1 }}>
                       <button
                         type="button"
                         aria-label="More appointment options"
@@ -151,7 +151,7 @@ function MyAppointments() {
                         <button
                           type="button"
                           onClick={() => handleDelete(visit._id)}
-                          style={{ display: "block", marginTop: "4px", background: "#2563eb", border: "1px solid #1d4ed8", color: "#fff", padding: "9px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: "600" }}
+                          style={{ position: "absolute", top: 0, left: "calc(100% + 8px)", background: "#2563eb", border: "1px solid #1d4ed8", color: "#fff", padding: "9px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
                         >
                           Delete
                         </button>
@@ -181,7 +181,7 @@ function MyAppointments() {
                   position: "relative",
                 }}
               >
-                <div style={{ position: "absolute", top: "12px", right: "-92px", zIndex: 1 }}>
+                <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 1 }}>
                   <button
                     type="button"
                     aria-label={`More options for ${visit.property?.title || "appointment"}`}
@@ -194,7 +194,7 @@ function MyAppointments() {
                     <button
                       type="button"
                       onClick={() => handleDelete(visit._id)}
-                      style={{ display: "block", marginTop: "4px", background: "#2563eb", border: "1px solid #1d4ed8", color: "#fff", padding: "9px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: "600" }}
+                      style={{ position: "absolute", top: 0, left: "calc(100% + 8px)", background: "#2563eb", border: "1px solid #1d4ed8", color: "#fff", padding: "9px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
                     >
                       Delete
                     </button>
