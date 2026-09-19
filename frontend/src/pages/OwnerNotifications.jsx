@@ -100,7 +100,7 @@ function OwnerNotifications() {
                     <button
                       type="button"
                       onClick={() => deleteNotification(item._id)}
-                      style={{ display: "block", marginTop: "4px", background: "#fee2e2", border: "1px solid #fca5a5", color: "#991b1b", padding: "6px 12px", borderRadius: "6px", cursor: "pointer" }}
+                      style={{ position: "absolute", top: 0, left: "calc(100% + 8px)", background: "#2563eb", border: "1px solid #1d4ed8", color: "#fff", padding: "9px 16px", borderRadius: "6px", cursor: "pointer", fontSize: "14px", fontWeight: "600", whiteSpace: "nowrap" }}
                     >
                       Delete
                     </button>
