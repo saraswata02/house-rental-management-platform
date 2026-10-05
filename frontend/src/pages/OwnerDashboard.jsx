@@ -6,6 +6,12 @@ import "../styles/ownerDashboard.css";
 import OwnerSlider from "../components/OwnerSlider";
 import api from "../utils/api";
 
+const isProfileIncomplete = (user) => {
+  if (!user) return true;
+  const requiredFields = ["phone", "dob", "gender"];
+  return requiredFields.some((field) => !user[field] || String(user[field]).trim() === "");
+};
+
 function OwnerDashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
@@ -14,6 +20,7 @@ function OwnerDashboard() {
     totalAppointments: 0,
     monthlyRevenue: 0,
   });
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -32,9 +39,60 @@ function OwnerDashboard() {
     fetchStats();
   }, []);
 
+  const handleAction = (path) => {
+    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+    if (isProfileIncomplete(currentUser)) {
+      setShowProfileModal(true);
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <div className="owner-dashboard">
       <OwnerNavbar />
+      {showProfileModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.55)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 2000,
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: 16,
+            width: "min(90vw, 420px)",
+            padding: "28px 24px",
+            textAlign: "center",
+            boxShadow: "0 20px 50px rgba(0,0,0,0.25)",
+          }}>
+            <h3 style={{ margin: "0 0 12px", fontSize: 24 }}>Complete your profile</h3>
+            <p style={{ margin: "0 0 20px", lineHeight: 1.6 }}>
+              Please complete your profile before listing properties or using owner actions.
+            </p>
+            <button
+              onClick={() => {
+                setShowProfileModal(false);
+                navigate("/owner-profile");
+              }}
+              style={{
+                background: "#1d4ed8",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                padding: "12px 20px",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Complete Profile
+            </button>
+          </div>
+        </div>
+      )}
       <OwnerSlider />
 
       <div className="owner-container">
@@ -66,22 +124,22 @@ function OwnerDashboard() {
         {/* Quick Actions */}
         <h2 className="section-title">Quick Actions</h2>
         <div className="action-grid">
-          <div className="action-card" onClick={() => navigate("/add-property")}>
+          <div className="action-card" onClick={() => handleAction("/add-property")}>
             <div className="action-icon">➕</div>
             <h3>Add Property</h3>
             <p>Post a new rental property.</p>
           </div>
-          <div className="action-card" onClick={() => navigate("/owner-properties")}>
+          <div className="action-card" onClick={() => handleAction("/owner-properties")}>
             <div className="action-icon">🏠</div>
             <h3>My Properties</h3>
             <p>Manage all your listings.</p>
           </div>
-          <div className="action-card" onClick={() => navigate("/owner-appointments")}>
+          <div className="action-card" onClick={() => handleAction("/owner-appointments")}>
             <div className="action-icon">📅</div>
             <h3>Appointment Requests</h3>
             <p>Approve or reject bookings.</p>
           </div>
-          <div className="action-card" onClick={() => navigate("/owner-analytics")} style={{ cursor: "pointer" }}>
+          <div className="action-card" onClick={() => handleAction("/owner-analytics")} style={{ cursor: "pointer" }}>
             <div className="action-icon">📊</div>
             <h3>Analytics</h3>
             <p>Track property performance.</p>
