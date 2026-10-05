@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import "../styles/signup.css";
 import AuthNavbar from "../components/AuthNavbar";
 import api from "../utils/api";
+import { FaGoogle } from "react-icons/fa";
+import { useGoogleLogin } from '@react-oauth/google';
 
 function Signup() {
   const [step, setStep] = useState(1);
@@ -23,6 +25,27 @@ function Signup() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post("/auth/social-login", {
+        provider: 'google',
+        accessToken: tokenResponse.access_token
+      });
+      localStorage.setItem("user", JSON.stringify(data));
+      navigate("/role-selection");
+    } catch (err) {
+      setError(err.response?.data?.message || "Google Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginGoogle = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setError("Google Login Failed")
+  });
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -115,6 +138,16 @@ function Signup() {
             <button className="next-btn" onClick={handleNext} disabled={loading}>
               {loading ? "Checking..." : "Next"}
             </button>
+
+            <div className="signup-divider">
+              <span>OR</span>
+            </div>
+
+            <div className="social-auth-buttons">
+              <button className="social-btn google-btn" onClick={() => loginGoogle()}>
+                <FaGoogle /> Login with Google
+              </button>
+            </div>
           </>
         ) : (
           <>

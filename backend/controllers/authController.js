@@ -1,5 +1,9 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
+const axios = require('axios');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Generate JWT
 const generateToken = (id) => {
@@ -101,4 +105,58 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { checkEmail, register, login };
+// @desc    Social Login / Signup
+// @route   POST /api/auth/social-login
+// @access  Public
+const socialLogin = async (req, res) => {
+    try {
+        const { provider, accessToken } = req.body;
+        let email, firstName, lastName;
+
+        if (provider === 'google') {
+            const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            email = data.email;
+            firstName = data.given_name;
+            lastName = data.family_name;
+        } else {
+            return res.status(400).json({ message: 'Invalid social provider' });
+        }
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email could not be retrieved from provider' });
+        }
+
+        let user = await User.findOne({ email });
+        if (!user) {
+            // Auto-signup
+            user = await User.create({
+                firstName: firstName || 'User',
+                lastName: lastName || '',
+                email,
+                phone: '',
+                gender: '',
+                dob: '',
+                password: Date.now().toString() + Math.random().toString(36).substring(7), // Random password
+                role: 'tenant', 
+            });
+        }
+
+        res.json({
+            _id: user._id,
+            userId: user.userId,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            role: user.role,
+            roles: user.roles,
+            token: generateToken(user._id),
+        });
+    } catch (error) {
+        console.error("Social Auth Error:", error);
+        res.status(500).json({ message: 'Social authentication failed: ' + error.message });
+    }
+};
+
+module.exports = { checkEmail, register, login, socialLogin };

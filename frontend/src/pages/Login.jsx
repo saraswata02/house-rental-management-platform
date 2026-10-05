@@ -4,6 +4,8 @@ import AuthNavbar from "../components/AuthNavbar";
 import { useNavigate } from "react-router-dom";
 import "../styles/login.css";
 import api from "../utils/api";
+import { FaGoogle } from "react-icons/fa";
+import { useGoogleLogin } from '@react-oauth/google';
 
 function Login() {
   const navigate = useNavigate();
@@ -11,6 +13,27 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleSuccess = async (tokenResponse) => {
+    try {
+      setLoading(true);
+      const { data } = await api.post("/auth/social-login", {
+        provider: 'google',
+        accessToken: tokenResponse.access_token
+      });
+      localStorage.setItem("user", JSON.stringify(data));
+      navigate("/role-selection"); // Or directly to dashboard if already onboarded
+    } catch (err) {
+      setError(err.response?.data?.message || "Google Login failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginGoogle = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: () => setError("Google Login Failed")
+  });
 
   useEffect(() => {
     if (!error) return undefined;
@@ -68,12 +91,14 @@ function Login() {
           {loading ? "Logging in..." : "Login"}
         </button>
 
-        <div className="divider">Or login with</div>
+        <div className="login-divider">
+          <span>OR</span>
+        </div>
 
-        <div className="social-buttons">
-          <button className="google">Google</button>
-          <button className="facebook">Facebook</button>
-          <button className="phone">Phone</button>
+        <div className="social-auth-buttons">
+          <button className="social-btn google-btn" onClick={() => loginGoogle()}>
+            <FaGoogle /> Google
+          </button>
         </div>
       </div>
       <Footer />
