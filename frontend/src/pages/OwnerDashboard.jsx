@@ -7,9 +7,7 @@ import OwnerSlider from "../components/OwnerSlider";
 import api from "../utils/api";
 
 const isProfileIncomplete = (user) => {
-  if (!user) return true;
-  const requiredFields = ["phone", "dob", "gender"];
-  return requiredFields.some((field) => !user[field] || String(user[field]).trim() === "");
+  return !user?.profileCompleted;
 };
 
 function OwnerDashboard() {
@@ -39,13 +37,22 @@ function OwnerDashboard() {
     fetchStats();
   }, []);
 
-  const handleAction = (path) => {
-    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-    if (isProfileIncomplete(currentUser)) {
-      setShowProfileModal(true);
-      return;
+  const handleAction = async (path) => {
+    try {
+      const { data: currentUser } = await api.get("/users/profile");
+      const cachedUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (cachedUser) {
+        localStorage.setItem("user", JSON.stringify({ ...cachedUser, ...currentUser }));
+      }
+      if (isProfileIncomplete(currentUser)) {
+        setShowProfileModal(true);
+        return;
+      }
+      navigate(path);
+    } catch (error) {
+      console.error("Unable to verify owner profile:", error);
+      window.alert("Unable to verify your profile. Please check your connection and try again.");
     }
-    navigate(path);
   };
 
   return (

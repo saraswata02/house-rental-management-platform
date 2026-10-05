@@ -8,6 +8,7 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:5001";
 
 function OwnerProfile() {
   const [editing, setEditing] = useState(false);
+  const [profileCompleted, setProfileCompleted] = useState(false);
   const [showAddress, setShowAddress] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -19,19 +20,26 @@ function OwnerProfile() {
     name: "", userId: "", email: "", phone: "",
     dob: "", gender: "",
     street: "", area: "", district: "", city: "", state: "", pincode: "",
+    password: "", confirmPassword: "", passwordSet: false,
   });
 
   useEffect(() => {
     const fetch = async () => {
       try {
         const { data } = await api.get("/users/profile");
+        const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+        if (currentUser) {
+          localStorage.setItem("user", JSON.stringify({ ...currentUser, ...data }));
+        }
+        setProfileCompleted(Boolean(data.profileCompleted));
         setProfile({
           name: `${data.firstName} ${data.lastName}`,
           userId: data.userId || "",
           email: data.email,
           phone: data.phone || "",
           dob: data.dob ? data.dob.slice(0, 10) : "",
-          gender: data.gender || "Male",
+          gender: data.gender || "",
+          passwordSet: Boolean(data.passwordSet),
           street: data.address?.street || "",
           area: data.address?.area || "",
           district: data.address?.district || "",
@@ -61,7 +69,7 @@ function OwnerProfile() {
     try {
       setSaving(true);
       const [firstName, ...rest] = profile.name.split(" ");
-      await api.put("/users/profile", {
+      const { data } = await api.put("/users/profile", {
         firstName,
         lastName: rest.join(" "),
         phone: profile.phone,
@@ -75,10 +83,38 @@ function OwnerProfile() {
           state: profile.state,
           pincode: profile.pincode,
         },
+        password: profile.password || undefined,
+        confirmPassword: profile.confirmPassword || undefined,
       });
+      const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (currentUser) {
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, ...data }));
+      }
+      setProfile((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+        passwordSet: data.passwordSet ?? prev.passwordSet,
+      }));
       setEditing(false);
     } catch {
       alert("Failed to save profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCompleteProfile = async () => {
+    try {
+      setSaving(true);
+      const { data } = await api.post("/users/profile/complete");
+      setProfileCompleted(Boolean(data.profileCompleted));
+      const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+      if (currentUser) {
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, ...data }));
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Unable to complete your profile.");
     } finally {
       setSaving(false);
     }
@@ -160,10 +196,19 @@ function OwnerProfile() {
             <div>
               <label>Gender</label>
               <select name="gender" value={profile.gender} disabled={!editing} onChange={handleChange}>
+                <option value="">Select gender</option>
                 <option>Male</option>
                 <option>Female</option>
                 <option>Other</option>
               </select>
+            </div>
+            <div>
+              <label>New Password</label>
+              <input type="password" name="password" value={profile.password} disabled={!editing} onChange={handleChange} placeholder="Create password" />
+            </div>
+            <div>
+              <label>Confirm Password</label>
+              <input type="password" name="confirmPassword" value={profile.confirmPassword} disabled={!editing} onChange={handleChange} placeholder="Confirm password" />
             </div>
           </div>
         </div>
@@ -207,6 +252,15 @@ function OwnerProfile() {
             </>
           ) : (
             <button className="edit-btn" onClick={() => setEditing(true)}>Edit Profile</button>
+          )}
+          {!profileCompleted && (
+            <button
+              className="save-btn"
+              onClick={handleCompleteProfile}
+              disabled={saving || editing || !profile.name.trim() || !profile.email.trim() || !profile.phone.trim() || !profile.dob || !profile.gender || !profile.passwordSet || !profile.street.trim() || !profile.area.trim() || !profile.district.trim() || !profile.city.trim() || !profile.state.trim() || !profile.pincode.trim()}
+            >
+              {saving ? "Confirming..." : "Mark Profile Completed"}
+            </button>
           )}
         </div>
       </div>

@@ -25,7 +25,7 @@ const updateProfile = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const { firstName, lastName, phone, dob, gender, role, address } = req.body;
+        const { firstName, lastName, phone, dob, gender, role, address, password, confirmPassword } = req.body;
 
         if (firstName) user.firstName = firstName;
         if (lastName) user.lastName = lastName;
@@ -43,6 +43,20 @@ const updateProfile = async (req, res) => {
         }
         if (address) user.address = { ...user.address, ...address };
 
+        if (password || confirmPassword) {
+            if (!password || !confirmPassword) {
+                return res.status(400).json({ message: 'Please enter both password fields.' });
+            }
+            if (password !== confirmPassword) {
+                return res.status(400).json({ message: 'Passwords do not match.' });
+            }
+            if (password.length < 6) {
+                return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+            }
+            user.password = password;
+            user.passwordSet = true;
+        }
+
         const updated = await user.save();
         res.json({
             _id: updated._id,
@@ -53,10 +67,43 @@ const updateProfile = async (req, res) => {
             phone: updated.phone,
             dob: updated.dob,
             gender: updated.gender,
+            passwordSet: updated.passwordSet,
             role: updated.role,
             roles: updated.roles,
+            profileCompleted: updated.profileCompleted,
             address: updated.address,
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+const completeProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const requiredFields = [user.firstName, user.lastName, user.email, user.phone, user.dob, user.gender];
+        if (user.role === 'landlord') {
+            requiredFields.push(
+                user.address.street,
+                user.address.area,
+                user.address.district,
+                user.address.city,
+                user.address.state,
+                user.address.pincode,
+            );
+        }
+        if (!user.passwordSet) requiredFields.push('');
+        if (requiredFields.some((value) => !String(value || '').trim())) {
+            return res.status(400).json({
+                message: 'Please save all required profile details before marking your profile complete. Profile photo is optional.',
+            });
+        }
+
+        user.profileCompleted = true;
+        await user.save();
+        res.json({ profileCompleted: user.profileCompleted });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -153,4 +200,4 @@ const upgradeSubscription = async (req, res) => {
     }
 };
 
-module.exports = { getProfile, updateProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture, upgradeSubscription };
+module.exports = { getProfile, updateProfile, completeProfile, addToWishlist, removeFromWishlist, getPublicProfile, uploadProfilePicture, upgradeSubscription };

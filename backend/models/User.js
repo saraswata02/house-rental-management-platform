@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { randomInt } = require('crypto');
 
 const userSchema = new mongoose.Schema({
     firstName:   { type: String, required: true, trim: true },
@@ -9,12 +10,14 @@ const userSchema = new mongoose.Schema({
     tenantUserId: { type: String, unique: true, sparse: true },
     ownerUserId: { type: String, unique: true, sparse: true },
     password:    { type: String, required: true, minlength: 6 },
+    passwordSet: { type: Boolean, default: true },
     phone:       { type: String, default: '' },
     dob:         { type: String, default: '' },
     gender:      { type: String, enum: ['Male', 'Female', 'Other', ''], default: '' },
     role:        { type: String, enum: ['tenant', 'landlord'], default: 'tenant' },
     roles:       { type: [{ type: String, enum: ['tenant', 'landlord'] }], default: [] },
     roleSelected: { type: Boolean, default: false },
+    profileCompleted: { type: Boolean, default: false },
     profilePicture: { type: String, default: '/default-profile.png' },
     address: {
         street:   { type: String, default: '' },
@@ -50,8 +53,27 @@ userSchema.pre('save', async function () {
             if (legacyId) {
                 this[idField] = legacyId;
             } else {
-                const count = await mongoose.model('User').countDocuments({ [idField]: new RegExp(`^${prefix}`) });
-                this[idField] = `${prefix}${String(count + 1).padStart(4, '0')}`;
+                const firstNumber = randomInt(1, 10000);
+                const User = mongoose.model('User');
+                let idFound = false;
+
+                for (let offset = 0; offset < 9999; offset += 1) {
+                    const number = ((firstNumber - 1 + offset) % 9999) + 1;
+                    const candidate = `${prefix}${String(number).padStart(4, '0')}`;
+                    const existingUser = await User.exists({
+                        $or: [{ [idField]: candidate }, { userId: candidate }],
+                    });
+
+                    if (!existingUser) {
+                        this[idField] = candidate;
+                        idFound = true;
+                        break;
+                    }
+                }
+
+                if (!idFound) {
+                    throw new Error(`No available ${prefix} user IDs remain.`);
+                }
             }
         }
 
